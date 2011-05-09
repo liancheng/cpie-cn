@@ -59,7 +59,7 @@
 </tr>
 </tbody>
 </table>
-<p>进程和进程见通信都是Erlang以及所有并行编程中最基本的概念，进程的创建和进程间的通信都是显式进行的。</p>
+<p>进程和进程间通信都是Erlang以及所有并行编程中最基本的概念，进程的创建和进程间的通信都是显式进行的。</p>
 <div class="section" id="id2">
 <h2>进程的创建<a class="headerlink" href="#id2" title="永久链接至标题">¶</a></h2>
 <p>一个进程是一个独立自治的计算单元，它与系统中其他的进程并行地存在。进程之间没有继承的层次关系，不过应用程序的设计者也可以显式地创建这样一个层次关系。</p>
@@ -74,7 +74,7 @@
 </div>
 <p>在<tt class="docutils literal"><span class="pre">spawn</span></tt>返回之后，会有两个进程<tt class="docutils literal"><span class="pre">Pid1</span></tt>和<tt class="docutils literal"><span class="pre">Pid2</span></tt>并行地存在，状态如图5.1(b)所示。现在只有进程<tt class="docutils literal"><span class="pre">Pid1</span></tt>知道新进程的标识符，亦即<tt class="docutils literal"><span class="pre">Pid2</span></tt>。由于<tt class="docutils literal"><span class="pre">Pid</span></tt>是一切进程间通讯的必要元素，一个Erlang系统中的安全性也是建立在限制进程<tt class="docutils literal"><span class="pre">Pid</span></tt>分发的基础上的。</p>
 <div class="figure">
-<img alt="_images/5.1.png" src="_images/5.1.png" />
+<img alt="_images/5.11.png" src="_images/5.11.png" />
 <p class="caption">图5.1</p>
 </div>
 <p>当传递给<tt class="docutils literal"><span class="pre">spawn</span></tt>的函数执行完毕之后，进程会自动退出。这个顶层函数的返回值将被丢弃<a class="footnote-reference" href="#id18" id="id3">[1]</a>。</p>
@@ -114,7 +114,7 @@
 </pre></div>
 </div>
 <div class="figure">
-<img alt="_images/5.2.png" src="_images/5.2.png" />
+<img alt="_images/5.21.png" src="_images/5.21.png" />
 <p class="caption">图5.2</p>
 </div>
 <p>会匹配到邮箱中的<tt class="docutils literal"><span class="pre">msg_3</span></tt>并导致它被从邮箱中删除。然后邮箱的状态会变成如图5.2(b)所示。当我们再运行</p>
@@ -224,7 +224,7 @@
 <p>计数器进程使用选择性接收的机制来处理发送过来的请求。它同时展示了一种处理未知消息的方法。通过在<tt class="docutils literal"><span class="pre">receive</span></tt>的最后一个子句中使用未绑定（unbound）的变量<tt class="docutils literal"><span class="pre">Other</span></tt>作为模式，任何未被之前的模式匹配到的消息都会被匹配到，此时我们直接忽略这样的未知消息并继续等待下一条消息。这是处理未知消息的标准方法：通过<tt class="docutils literal"><span class="pre">receive</span></tt>把它们从邮箱中删除掉。</p>
 <p>为了访问计数器的值，我们必须将自己的<tt class="docutils literal"><span class="pre">Pid</span></tt>作为消息的一部分发送给计数器进程，这样它才能将回复发送回来。回复的消息中也包含了发送方的进程标识符（在这里也就是计数器进程的<tt class="docutils literal"><span class="pre">Pid</span></tt>），这使得接收进程可以只接收包含回复的这个消息。简单地等待一个包含未知值（在这个例子中是一个数字）的消息是不安全的做法，任何不相关的碰巧发送到该进程的消息都会被匹配到。因此，在进程之间发送的消息通常都会包含某种标识自己的机制，一种方法是通过内容进行标识，就像发送给计数器进程的请求消息一样，另一种方法是通过在消息中包含某种“唯一”并且可以很容易识别的标识符，就如同计数器进程发回的包含计数器值的回复消息一样。</p>
 <div class="figure">
-<img alt="_images/5.3.png" src="_images/5.3.png" />
+<img alt="_images/5.31.png" src="_images/5.31.png" />
 <p class="caption">图5.3</p>
 </div>
 <p>现在我们再来考虑对一个有穷自动机（FSM）进行建模。图5.3展示了一个4状态的简单FSM以及可能的状态转移和相应的触发事件。一种编写这样的“状态-事件”机器的方法如程序5.3所示。在这段代码中，我们只专注于如何表示状态以及管理状态之间的转移。每个状态由一个单独的函数表示，而事件则表示为消息。</p>
@@ -391,7 +391,7 @@
 <p>注册进程的一个主要用途就是用于支持<strong>“客户端-服务端”模型</strong>编程。在这个模型中有一个<strong>服务端</strong>管理着一些资源，一些<strong>客户端</strong>通过向服务端发送请求来访问这些资源，如图5.4所示。要实现这个模型，我们需要三个基本组件——一个<strong>服务端</strong>，一个<strong>协议</strong>和一个<strong>访问库</strong>。我们将通过几个例子来阐明基本原则。</p>
 <p>在先前的程序5.2中展示的<tt class="docutils literal"><span class="pre">counter</span></tt>模块里，每一根计数器都是一个服务端。客户端通过调用模块所定义的函数来访问服务端。</p>
 <div class="figure">
-<img alt="_images/5.4.png" src="_images/5.4.png" />
+<img alt="_images/5.41.png" src="_images/5.41.png" />
 <p class="caption">图5.4</p>
 </div>
 <p>程序5.5中展示的例子是一个可以用于电话交换机系统里分析用户所拨打的号码的服务端。<tt class="docutils literal"><span class="pre">start()</span></tt>会调用<tt class="docutils literal"><span class="pre">spawn</span></tt>并将新建的进程注册为<tt class="docutils literal"><span class="pre">number_analyser</span></tt>，这就完成了号码分析服务端的创建。之后服务端进程会在<tt class="docutils literal"><span class="pre">server</span></tt>函数中不断循环并等待服务请求。如果收到了一个形如<tt class="docutils literal"><span class="pre">{add_number,Seq,Dest}</span></tt>的请求，该号码序列（<tt class="docutils literal"><span class="pre">Seq</span></tt>）以及对应的目标进程（<tt class="docutils literal"><span class="pre">Dest</span></tt>），以及分析出结果之后将会发送的目的地，会被添加到查找表中。这是由函数<tt class="docutils literal"><span class="pre">insert</span></tt>完成的。之后消息<tt class="docutils literal"><span class="pre">ack</span></tt>将会被发送到请求的进程。如果服务端收到了形如<tt class="docutils literal"><span class="pre">{analyse,Seq}</span></tt>的消息，那么它将通过调用<tt class="docutils literal"><span class="pre">lookup</span></tt>完成号码序列<tt class="docutils literal"><span class="pre">Seq</span></tt>的分析，并将包含分析结果的消息发回发送请求的进程。我们在这里没有给出函数<tt class="docutils literal"><span class="pre">insert</span></tt>和<tt class="docutils literal"><span class="pre">lookup</span></tt>的具体定义，因为那对于我们目前讨论的问题而言并不重要。</p>
