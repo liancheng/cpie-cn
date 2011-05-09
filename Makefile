@@ -130,20 +130,3 @@ doctest:
 	$(SPHINXBUILD) -b doctest $(ALLSPHINXOPTS) $(BUILDDIR)/doctest
 	@echo "Testing of doctests in the sources finished, look at the " \
 	      "results in $(BUILDDIR)/doctest/output.txt."
-
-svn-ps:
-	@find . -name "*.html" | xargs svn ps 'svn:mime-type' --force 'text/html' > /dev/null
-	@find . -name "*.css"  | xargs svn ps 'svn:mime-type' --force 'text/css' > /dev/null
-	@find . -name "*.js"   | xargs svn ps 'svn:mime-type' --force 'application/x-javascript' > /dev/null
-	@find . -name "*.png"  | xargs svn ps 'svn:mime-type' --force 'image/png' > /dev/null
-	@find . -name "*.rst"  | xargs svn ps 'svn:eol-style' --force 'LF' > /dev/null
-	@find . -name "*.txt"  | xargs svn ps 'svn:eol-style' --force 'LF' > /dev/null
-	@find . -type f  | xargs chmod -x
-
-export:
-	@rm -rf /tmp/cpie-cn
-	@svn export _build/html /tmp/cpie-cn
-	@tar czf _build/cpie-cn.tar.gz -C /tmp/ cpie-cn
-	@svn ps 'svn:mime-type' 'application/x-tar-gz' _build/cpie-cn.tar.gz > /dev/null
-	@svn ps 'svn:mime-type' 'application/pdf' _build/cpie-cn_r148.pdf > /dev/null
-	@rm -rf /tmp/cpie-cn
