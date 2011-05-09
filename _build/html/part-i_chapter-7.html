@@ -1,0 +1,716 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>第7章 错误处理 &mdash; Erlang并发编程</title>
+    <link rel="stylesheet" href="_static/nature-ext.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '1.0.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/translations.js"></script>
+    <link rel="top" title="Erlang并发编程" href="index.html" />
+    <link rel="up" title="第 I 部分 编程" href="part-i_index.html" />
+    <link rel="next" title="第8章 编写健壮的应用程序" href="part-i_chapter-8.html" />
+    <link rel="prev" title="第6章 分布式编程" href="part-i_chapter-6.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>导航</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="part-i_chapter-8.html" title="第8章 编写健壮的应用程序"
+             accesskey="N">下一页</a></li>
+        <li class="right" >
+          <a href="part-i_chapter-6.html" title="第6章 分布式编程"
+             accesskey="P">上一页</a> |</li>
+        <li><a href="index.html">Erlang并发编程</a> &raquo;</li>
+          <li><a href="part-i_index.html" accesskey="U">第 I 部分 编程</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="id1">
+<h1>第7章 错误处理<a class="headerlink" href="#id1" title="永久链接至标题">¶</a></h1>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">翻译:</th><td class="field-body">丁豪</td>
+</tr>
+<tr class="field"><th class="field-name">校对:</th><td class="field-body">连城</td>
+</tr>
+</tbody>
+</table>
+<p>即便是Erlang程序员也难免会写出有问题的程序。代码中的语法错误（和一些语义错误）可以借助编译器检测出来，但程序仍可能含有逻辑错误。对需求理解的偏差或对需求实现的不完备所造成的逻辑错误只能通过大量的一致性测试来检测。其他的错误则以运行时错误的形式出现。</p>
+<p>函数是在Erlang进程中执行的。函数可能出于多种原因而失败，比如：</p>
+<ul class="simple">
+<li>一次匹配操作失败</li>
+<li>使用错误的参数调用BIF</li>
+<li>我们可能打算对一个算术表达式求值，然而其中的一个项式并不是数值</li>
+</ul>
+<p>Erlang本身当然无法修正这些情况，但它为程序员提供了一些检测和处理失败情况的机制。借助这些机制，程序员可以设计出健壮和容错的系统。Erlang具备如下机制：</p>
+<ul class="simple">
+<li>监视表达式的求值</li>
+<li>监视其他进程的行为</li>
+<li>捕获对未定义函数的求值</li>
+</ul>
+<div class="section" id="catch-throw">
+<h2>Catch和Throw<a class="headerlink" href="#catch-throw" title="永久链接至标题">¶</a></h2>
+<p><tt class="docutils literal"><span class="pre">catch</span></tt>和<tt class="docutils literal"><span class="pre">throw</span></tt>提供了一种表达式求值的监视机制，可以用于</p>
+<ul class="simple">
+<li>处理顺序代码中的错误（<tt class="docutils literal"><span class="pre">catch</span></tt>）</li>
+<li>函数的非本地返回（<tt class="docutils literal"><span class="pre">catch</span></tt>结合<tt class="docutils literal"><span class="pre">throw</span></tt>）</li>
+</ul>
+<p>表达式求值失败（如一次匹配失败）的一般后果是导致求值进程的异常退出。通过以下方式可以借助<tt class="docutils literal"><span class="pre">catch</span></tt>来更改这个默认行为：</p>
+<div class="highlight-erlang"><div class="highlight"><pre><span class="k">catch</span> <span class="nv">Expression</span>
+</pre></div>
+</div>
+<p>若表达式的求值过程没有发生错误，则<tt class="docutils literal"><span class="pre">catch</span> <span class="pre">Expression</span></tt>返回<tt class="docutils literal"><span class="pre">Expression</span></tt>的值。于是<tt class="docutils literal"><span class="pre">catch</span> <span class="pre">atom_to_list(abc)</span></tt>会返回<tt class="docutils literal"><span class="pre">[97,98,99]</span></tt>、<tt class="docutils literal"><span class="pre">catch</span> <span class="pre">22</span></tt>会返回<tt class="docutils literal"><span class="pre">22</span></tt>。</p>
+<p>若求值过程失败，<tt class="docutils literal"><span class="pre">catch</span> <span class="pre">Expression</span></tt>将返回元组<tt class="docutils literal"><span class="pre">{'EXIT',</span> <span class="pre">Reason}</span></tt>，其中<tt class="docutils literal"><span class="pre">Reason</span></tt>是用于指明错误原因的原子式（参见第??节）。于是<tt class="docutils literal"><span class="pre">catch</span> <span class="pre">an_atom</span> <span class="pre">-</span> <span class="pre">2</span></tt>会返回<tt class="docutils literal"><span class="pre">{'EXIT',</span> <span class="pre">badarith}</span></tt>、<tt class="docutils literal"><span class="pre">catch</span> <span class="pre">atom_to_list(123)</span></tt>会返回<tt class="docutils literal"><span class="pre">{'EXIT',</span> <span class="pre">badarg}</span></tt>。</p>
+<p>函数执行结束后，控制流程便返还者。<tt class="docutils literal"><span class="pre">throw/1</span></tt>可以令控制流程跳过调用者。如果我们像上述的那样计算<tt class="docutils literal"><span class="pre">catch</span> <span class="pre">Expression</span></tt>，并在<tt class="docutils literal"><span class="pre">Expression</span></tt>的求值过程中调用<tt class="docutils literal"><span class="pre">throw/1</span></tt>，则控制流程将直接返回至<tt class="docutils literal"><span class="pre">catch</span></tt>。注意<tt class="docutils literal"><span class="pre">catch</span></tt>可以嵌套；在嵌套的情况下，一次失败或<tt class="docutils literal"><span class="pre">throw</span></tt>将返回至最近的<tt class="docutils literal"><span class="pre">catch</span></tt>处。在<tt class="docutils literal"><span class="pre">catch</span></tt>之外调用<tt class="docutils literal"><span class="pre">throw/1</span></tt>将导致运行时错误。</p>
+<p>下面的例子描述了<tt class="docutils literal"><span class="pre">catch</span></tt>和<tt class="docutils literal"><span class="pre">throw</span></tt>的行为。定义函数<tt class="docutils literal"><span class="pre">foo/1</span></tt>：</p>
+<div class="highlight-erlang"><div class="highlight"><pre><span class="nf">foo</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">-&gt;</span>
+    <span class="n">hello</span><span class="p">;</span>
+<span class="nf">foo</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">-&gt;</span>
+    <span class="n">throw</span><span class="p">({</span><span class="n">myerror</span><span class="p">,</span> <span class="n">abc</span><span class="p">});</span>
+<span class="nf">foo</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span> <span class="o">-&gt;</span>
+    <span class="nb">tuple_to_list</span><span class="p">(</span><span class="n">a</span><span class="p">);</span>
+<span class="nf">foo</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span> <span class="o">-&gt;</span>
+    <span class="nb">exit</span><span class="p">({</span><span class="n">myExit</span><span class="p">,</span> <span class="mi">222</span><span class="p">}).</span>
+</pre></div>
+</div>
+<p>假设在不使用<tt class="docutils literal"><span class="pre">catch</span></tt>的情况下，一个进程标识为<tt class="docutils literal"><span class="pre">Pid</span></tt>的进程执行了这个函数，则：</p>
+<p><tt class="docutils literal"><span class="pre">foo(1)</span></tt></p>
+<blockquote>
+<div>返回<tt class="docutils literal"><span class="pre">hello</span></tt>。</div></blockquote>
+<p><tt class="docutils literal"><span class="pre">foo(2)</span></tt></p>
+<blockquote>
+<div>执行<tt class="docutils literal"><span class="pre">throw({myerror,abc})</span></tt>。由于不在<tt class="docutils literal"><span class="pre">catch</span></tt>的作用域内，执行<tt class="docutils literal"><span class="pre">foo(2)</span></tt>的进程将出错退出。</div></blockquote>
+<p><tt class="docutils literal"><span class="pre">foo(3)</span></tt></p>
+<blockquote>
+<div>执行<tt class="docutils literal"><span class="pre">foo(3)</span></tt>的进程执行BIF <tt class="docutils literal"><span class="pre">tuple_to_list(a)</span></tt>。这个BIF用于将元组转换为列表。在这个例子中，参数不是元组，因此该进程将出错退出。</div></blockquote>
+<p><tt class="docutils literal"><span class="pre">foo(4)</span></tt></p>
+<blockquote>
+<div>执行BIF <tt class="docutils literal"><span class="pre">exit/1</span></tt>。由于不在<tt class="docutils literal"><span class="pre">catch</span></tt>的范围内，执行<tt class="docutils literal"><span class="pre">foo(4)</span></tt>的函数将退出。很快我们就会看到参数<tt class="docutils literal"><span class="pre">{myExit,222}</span></tt>的用途。</div></blockquote>
+<p><tt class="docutils literal"><span class="pre">foo(5)</span></tt></p>
+<blockquote>
+<div>执行<tt class="docutils literal"><span class="pre">foo(5)</span></tt>的进程将出错退出，因为函数<tt class="docutils literal"><span class="pre">foo/1</span></tt>的首部无法匹配<tt class="docutils literal"><span class="pre">foo(5)</span></tt>。</div></blockquote>
+<p>现在让我们来看看在<tt class="docutils literal"><span class="pre">catch</span></tt>的作用域内对<tt class="docutils literal"><span class="pre">foo/1</span></tt>以相同的参数进行求值会发生什么：</p>
+<div class="highlight-erlang"><div class="highlight"><pre><span class="nf">demo</span><span class="p">(</span><span class="nv">X</span><span class="p">)</span> <span class="o">-&gt;</span>
+    <span class="k">case</span> <span class="k">catch</span> <span class="n">foo</span><span class="p">(</span><span class="nv">X</span><span class="p">)</span> <span class="k">of</span>
+        <span class="p">{</span><span class="n">myerror</span><span class="p">,</span> <span class="nv">Args</span><span class="p">}</span> <span class="o">-&gt;</span>
+            <span class="p">{</span><span class="n">user_error</span><span class="p">,</span> <span class="nv">Args</span><span class="p">};</span>
+        <span class="p">{</span><span class="n">&#39;EXIT&#39;</span><span class="p">,</span> <span class="nv">What</span><span class="p">}</span> <span class="o">-&gt;</span>
+            <span class="p">{</span><span class="n">caught_error</span><span class="p">,</span> <span class="nv">What</span><span class="p">};</span>
+        <span class="nv">Other</span> <span class="o">-&gt;</span>
+            <span class="nv">Other</span>
+    <span class="k">end</span><span class="p">.</span>
+</pre></div>
+</div>
+<p><tt class="docutils literal"><span class="pre">demo(1)</span></tt></p>
+<blockquote>
+<div>像原来一样执行<tt class="docutils literal"><span class="pre">hello</span></tt>。因为没有任何失败发生，而我们也没有执行<tt class="docutils literal"><span class="pre">throw</span></tt>，所以<tt class="docutils literal"><span class="pre">catch</span></tt>直接返回<tt class="docutils literal"><span class="pre">foo(1)</span></tt>的求值结果。</div></blockquote>
+<p><tt class="docutils literal"><span class="pre">demo(2)</span></tt></p>
+<blockquote>
+<div>求值结果为<tt class="docutils literal"><span class="pre">{user_error,abc}</span></tt>。对<tt class="docutils literal"><span class="pre">throw({myerror,abc})</span></tt>的求值导致外围的<tt class="docutils literal"><span class="pre">catch</span></tt>返回<tt class="docutils literal"><span class="pre">{myerror,</span> <span class="pre">abc}</span></tt>同时<tt class="docutils literal"><span class="pre">case</span></tt>语句返回<tt class="docutils literal"><span class="pre">{user_error,abc}</span></tt>。</div></blockquote>
+<p><tt class="docutils literal"><span class="pre">demo(3)</span></tt></p>
+<blockquote>
+<div>求值结果为<tt class="docutils literal"><span class="pre">{caught_error,badarg}</span></tt>。<tt class="docutils literal"><span class="pre">foo(3)</span></tt>执行失败导致<tt class="docutils literal"><span class="pre">catch</span></tt>返回<tt class="docutils literal"><span class="pre">{'EXIT',badarg}</span></tt>。</div></blockquote>
+<p><tt class="docutils literal"><span class="pre">demo(4)</span></tt></p>
+<blockquote>
+<div>求值结果为<tt class="docutils literal"><span class="pre">{caught_error,{myexit,222}}</span></tt>。</div></blockquote>
+<p><tt class="docutils literal"><span class="pre">demo(5)</span></tt></p>
+<blockquote>
+<div>求值结果为<tt class="docutils literal"><span class="pre">{caught_error,function_clause}</span></tt>。</div></blockquote>
+<p>注意，在<tt class="docutils literal"><span class="pre">catch</span></tt>的作用域内，借助<tt class="docutils literal"><span class="pre">{'EXIT',</span> <span class="pre">Message}</span></tt>，你能够很容易地“伪造”一次失败——这是一个<strong>设计决策</strong><a class="footnote-reference" href="#id16" id="id2">[1]</a>。</p>
+<div class="section" id="id3">
+<h3>使用catch和throw抵御不良代码<a class="headerlink" href="#id3" title="永久链接至标题">¶</a></h3>
+<p>下面来看一个简单的Erlang shell脚本：</p>
+<div class="highlight-erlang"><div class="highlight"><pre><span class="p">-</span><span class="ni">module</span><span class="p">(</span><span class="n">s_shell</span><span class="p">).</span>
+<span class="p">-</span><span class="ni">export</span><span class="p">([</span><span class="n">go</span><span class="o">/</span><span class="mi">0</span><span class="p">]).</span>
+
+<span class="nf">go</span><span class="p">()</span> <span class="o">-&gt;</span>
+    <span class="n">eval</span><span class="p">(</span><span class="nn">io</span><span class="p">:</span><span class="n">parse_exprs</span><span class="p">(</span><span class="n">&#39;=&gt; &#39;</span><span class="p">)),</span>    <span class="c">% &#39;=&gt;&#39; is the prompt</span>
+    <span class="n">go</span><span class="p">().</span>
+
+<span class="nf">eval</span><span class="p">({</span><span class="n">form</span><span class="p">,</span><span class="nv">Exprs</span><span class="p">})</span> <span class="o">-&gt;</span>
+    <span class="k">case</span> <span class="k">catch</span> <span class="nn">eval</span><span class="p">:</span><span class="n">exprs</span><span class="p">(</span><span class="nv">Exprs</span><span class="p">,</span> <span class="p">[])</span> <span class="k">of</span> <span class="c">% Note the catch</span>
+        <span class="p">{</span><span class="n">&#39;EXIT&#39;</span><span class="p">,</span> <span class="nv">What</span><span class="p">}</span> <span class="o">-&gt;</span>
+            <span class="nn">io</span><span class="p">:</span><span class="n">format</span><span class="p">(</span><span class="s">&quot;Error: </span><span class="si">~w</span><span class="s">!</span><span class="si">~n</span><span class="s">&quot;</span><span class="p">,</span> <span class="p">[</span><span class="nv">What</span><span class="p">]);</span>
+        <span class="p">{</span><span class="n">value</span><span class="p">,</span> <span class="nv">What</span><span class="p">,</span> <span class="p">_}</span> <span class="o">-&gt;</span>
+            <span class="nn">io</span><span class="p">:</span><span class="n">format</span><span class="p">(</span><span class="s">&quot;Result: </span><span class="si">~w~n</span><span class="s">&quot;</span><span class="p">,</span> <span class="p">[</span><span class="nv">What</span><span class="p">])</span>
+    <span class="k">end</span><span class="p">;</span>
+<span class="nf">eval</span><span class="p">(_)</span> <span class="o">-&gt;</span>
+    <span class="nn">io</span><span class="p">:</span><span class="n">format</span><span class="p">(</span><span class="s">&quot;Syntax Error!</span><span class="si">~n</span><span class="s">&quot;</span><span class="p">,</span> <span class="p">[]).</span>
+</pre></div>
+</div>
+<p>标准库函数<tt class="docutils literal"><span class="pre">io:parse_exprs/1</span></tt>读取并解析一个Erlang表达式，若表达式合法，则返回<tt class="docutils literal"><span class="pre">{form,Exprs}</span></tt>。</p>
+<p>正确情况下，应该匹配到第一个子句<tt class="docutils literal"><span class="pre">eval({form,Expr})</span></tt>并调用库函数<tt class="docutils literal"><span class="pre">eval:exprs/2</span></tt>对表达式进行求值。由于无法得知表达式的求值过程是否为失败，我们在此使用<tt class="docutils literal"><span class="pre">catch</span></tt>进行保护。例如，对<tt class="docutils literal"><span class="pre">1</span> <span class="pre">-</span> <span class="pre">a</span></tt>进行求值将导致错误，但在<tt class="docutils literal"><span class="pre">catch</span></tt>内对<tt class="docutils literal"><span class="pre">1</span> <span class="pre">-</span> <span class="pre">a</span></tt>求值就可以捕捉这个错误<a class="footnote-reference" href="#id17" id="id4">[2]</a>。借助<tt class="docutils literal"><span class="pre">catch</span></tt>，在求值失败时，<tt class="docutils literal"><span class="pre">case</span></tt>子句与模式<tt class="docutils literal"><span class="pre">{'EXIT',what}</span></tt>匹配，在求值成功时则会与<tt class="docutils literal"><span class="pre">{value,</span> <span class="pre">What,</span> <span class="pre">_}</span></tt>匹配。</p>
+</div>
+<div class="section" id="id5">
+<h3>使用catch和throw实现函数的非本地返回<a class="headerlink" href="#id5" title="永久链接至标题">¶</a></h3>
+<p>假设我们要编写一个用于识别简单整数列表的解析器，可以编写如下的代码：</p>
+<div class="highlight-erlang"><div class="highlight"><pre><span class="nf">parse_list</span><span class="p">([</span><span class="n">&#39;[&#39;</span><span class="p">,</span><span class="n">&#39;]&#39;</span> <span class="p">|</span> <span class="nv">T</span><span class="p">])</span>
+    <span class="p">{</span><span class="n">nil</span><span class="p">,</span> <span class="nv">T</span><span class="p">};</span>
+<span class="nf">parse_list</span><span class="p">([</span><span class="n">&#39;[&#39;</span><span class="p">,</span> <span class="nv">X</span> <span class="p">|</span> <span class="nv">T</span><span class="p">])</span> <span class="k">when</span> <span class="n">integer</span><span class="p">(</span><span class="nv">X</span><span class="p">)</span> <span class="o">-&gt;</span>
+    <span class="p">{</span><span class="nv">Tail</span><span class="p">,</span> <span class="nv">T1</span><span class="p">}</span> <span class="o">=</span> <span class="n">parse_list_tail</span><span class="p">(</span><span class="nv">T</span><span class="p">),</span>
+    <span class="p">{{</span><span class="n">cons</span><span class="p">,</span> <span class="nv">X</span><span class="p">,</span> <span class="nv">Tail</span><span class="p">},</span> <span class="nv">T1</span><span class="p">}.</span>
+
+<span class="nf">parse_list_tail</span><span class="p">([</span><span class="n">&#39;,&#39;</span><span class="p">,</span> <span class="nv">X</span> <span class="p">|</span> <span class="nv">T</span><span class="p">])</span> <span class="k">when</span> <span class="n">integer</span><span class="p">(</span><span class="nv">X</span><span class="p">)</span> <span class="o">-&gt;</span>
+    <span class="p">{</span><span class="nv">Tail</span><span class="p">,</span> <span class="nv">T1</span><span class="p">}</span> <span class="o">=</span> <span class="n">parse_list_tail</span><span class="p">(</span><span class="nv">T</span><span class="p">),</span>
+    <span class="p">{{</span><span class="n">cons</span><span class="p">,</span> <span class="nv">X</span><span class="p">,</span> <span class="nv">Tail</span><span class="p">},</span> <span class="nv">T1</span><span class="p">};</span>
+<span class="nf">parse_list_tail</span><span class="p">([</span><span class="n">&#39;]&#39;</span> <span class="p">|</span> <span class="nv">T</span><span class="p">])</span> <span class="o">-&gt;</span>
+    <span class="p">{</span><span class="n">nil</span><span class="p">,</span> <span class="nv">T</span><span class="p">}.</span>
+</pre></div>
+</div>
+<p>例如：</p>
+<div class="highlight-erlang"><div class="highlight"><pre><span class="o">&gt;</span> <span class="n">parse_list</span><span class="p">([</span><span class="n">&#39;[&#39;</span><span class="p">,</span><span class="mi">12</span><span class="p">,</span><span class="n">&#39;,&#39;</span><span class="p">,</span><span class="mi">20</span><span class="p">,</span><span class="n">&#39;]&#39;</span><span class="p">]).</span>
+<span class="p">{{</span><span class="n">cons</span><span class="p">,</span><span class="mi">12</span><span class="p">,{</span><span class="n">cons</span><span class="p">,</span><span class="mi">20</span><span class="p">,</span><span class="n">nil</span><span class="p">}},[]}</span>
+</pre></div>
+</div>
+<p>要是我们试图解析一个非法的列表，就会导致如下的错误：</p>
+<div class="highlight-erlang"><div class="highlight"><pre><span class="o">&gt;</span> <span class="k">try</span><span class="p">:</span><span class="n">parse_list</span><span class="p">([</span><span class="n">&#39;[&#39;</span><span class="p">,</span><span class="mi">12</span><span class="p">,</span><span class="n">&#39;,&#39;</span><span class="p">,</span><span class="n">a</span><span class="p">]).</span>
+<span class="o">!!!</span> <span class="nv">Error</span> <span class="n">in</span> <span class="n">process</span> <span class="o">&lt;</span><span class="mi">0</span><span class="p">.</span><span class="mi">16</span><span class="p">.</span><span class="mi">1</span><span class="o">&gt;</span> <span class="n">in</span> <span class="n">function</span>
+<span class="o">!!!</span>     <span class="k">try</span><span class="p">:</span><span class="n">parse_list_tail</span><span class="p">([</span><span class="n">&#39;,&#39;</span><span class="p">,</span><span class="n">a</span><span class="p">])</span>
+<span class="o">!!!</span> <span class="n">reason</span> <span class="n">function_clause</span>
+<span class="o">**</span> <span class="nn">exited</span><span class="p">:</span> <span class="n">function_clause</span> <span class="o">**</span>
+</pre></div>
+</div>
+<p>如果我们想在跳出递归调用的同时仍然掌握是哪里发生了错误，可以这样做：</p>
+<div class="highlight-erlang"><div class="highlight"><pre><span class="nf">parse_list1</span><span class="p">([</span><span class="n">&#39;[&#39;</span><span class="p">,</span><span class="n">&#39;]&#39;</span> <span class="p">|</span> <span class="nv">T</span><span class="p">])</span> <span class="o">-&gt;</span>
+    <span class="p">{</span><span class="n">nil</span><span class="p">,</span> <span class="nv">T</span><span class="p">};</span>
+<span class="nf">parse_list1</span><span class="p">([</span><span class="n">&#39;[&#39;</span><span class="p">,</span> <span class="nv">X</span> <span class="p">|</span> <span class="nv">T</span><span class="p">])</span> <span class="k">when</span> <span class="n">integer</span><span class="p">(</span><span class="nv">X</span><span class="p">)</span> <span class="o">-&gt;</span>
+    <span class="p">{</span><span class="nv">Tail</span><span class="p">,</span> <span class="nv">T1</span><span class="p">}</span> <span class="o">=</span> <span class="n">parse_list_tail1</span><span class="p">(</span><span class="nv">T</span><span class="p">),</span>
+    <span class="p">{{</span><span class="n">cons</span><span class="p">,</span> <span class="nv">X</span><span class="p">,</span> <span class="nv">Tail</span><span class="p">},</span> <span class="nv">T1</span><span class="p">};</span>
+<span class="nf">parse_list1</span><span class="p">(</span><span class="nv">X</span><span class="p">)</span> <span class="o">-&gt;</span>
+    <span class="n">throw</span><span class="p">({</span><span class="n">illegal_token</span><span class="p">,</span> <span class="nv">X</span><span class="p">}).</span>
+
+<span class="nf">parse_list_tail1</span><span class="p">([</span><span class="n">&#39;,&#39;</span><span class="p">,</span> <span class="nv">X</span> <span class="p">|</span> <span class="nv">T</span><span class="p">])</span> <span class="k">when</span> <span class="n">integer</span><span class="p">(</span><span class="nv">X</span><span class="p">)</span> <span class="o">-&gt;</span>
+    <span class="p">{</span><span class="nv">Tail</span><span class="p">,</span> <span class="nv">T1</span><span class="p">}</span> <span class="o">=</span> <span class="n">parse_list_tail1</span><span class="p">(</span><span class="nv">T</span><span class="p">),</span>
+    <span class="p">{{</span><span class="n">cons</span><span class="p">,</span> <span class="nv">X</span><span class="p">,</span> <span class="nv">Tail</span><span class="p">},</span> <span class="nv">T1</span><span class="p">};</span>
+<span class="nf">parse_list_tail1</span><span class="p">([</span><span class="n">&#39;]&#39;</span> <span class="p">|</span> <span class="nv">T</span><span class="p">])</span> <span class="o">-&gt;</span>
+    <span class="p">{</span><span class="n">nil</span><span class="p">,</span> <span class="nv">T</span><span class="p">};</span>
+<span class="nf">parse_list_tail1</span><span class="p">(</span><span class="nv">X</span><span class="p">)</span> <span class="o">-&gt;</span>
+    <span class="n">throw</span><span class="p">({</span><span class="n">illegal_list_tail</span><span class="p">,</span> <span class="nv">X</span><span class="p">}).</span>
+</pre></div>
+</div>
+<p>现在，如果我们在<tt class="docutils literal"><span class="pre">catch</span></tt>里对<tt class="docutils literal"><span class="pre">parse_list/1</span></tt>求值，将获得以下结果：</p>
+<div class="highlight-erlang"><div class="highlight"><pre><span class="o">&gt;</span> <span class="k">catch</span> <span class="n">parse_list1</span><span class="p">([</span><span class="n">&#39;[&#39;</span><span class="p">,</span><span class="mi">12</span><span class="p">,</span><span class="n">&#39;,&#39;</span><span class="p">,</span><span class="n">a</span><span class="p">]).</span>
+<span class="p">{</span><span class="n">illegal_list_tail</span><span class="p">,[</span><span class="n">&#39;,&#39;</span><span class="p">,</span><span class="n">a</span><span class="p">]}</span>
+</pre></div>
+</div>
+<p>通过这种方式，我们得以从递归中直接退出，而不必沿着通常的递归调用路径逐步折回。</p>
+</div>
+</div>
+<div class="section" id="id6">
+<h2>进程终止<a class="headerlink" href="#id6" title="永久链接至标题">¶</a></h2>
+<p>当一个进程的进程执行函数（通过<tt class="docutils literal"><span class="pre">spawn/4</span></tt>创建进程时第3个参数所指定的函数）执行完毕，或是（在<tt class="docutils literal"><span class="pre">catch</span></tt>之外）执行<tt class="docutils literal"><span class="pre">exit(normal)</span></tt>，便会正常退出。参见程序7.1：</p>
+<p><tt class="docutils literal"><span class="pre">test:start()</span></tt></p>
+<blockquote>
+<div>创建一个注册名为<tt class="docutils literal"><span class="pre">my_name</span></tt>的进程来执行<tt class="docutils literal"><span class="pre">test:process()</span></tt>。</div></blockquote>
+<div class="topic">
+<p class="topic-title first">程序7.1</p>
+<div class="highlight-erlang"><div class="highlight"><pre><span class="p">-</span><span class="ni">module</span><span class="p">(</span><span class="n">test</span><span class="p">).</span>
+<span class="p">-</span><span class="ni">export</span><span class="p">([</span><span class="n">process</span><span class="o">/</span><span class="mi">0</span><span class="p">,</span> <span class="n">start</span><span class="o">/</span><span class="mi">0</span><span class="p">]).</span>
+<span class="nf">start</span><span class="p">()</span> <span class="o">-&gt;</span>
+    <span class="nb">register</span><span class="p">(</span><span class="n">my_name</span><span class="p">,</span> <span class="nb">spawn</span><span class="p">(</span><span class="n">test</span><span class="p">,</span> <span class="n">process</span><span class="p">,</span> <span class="p">[])).</span>
+<span class="nf">process</span><span class="p">()</span> <span class="o">-&gt;</span>
+    <span class="k">receive</span>
+         <span class="p">{</span><span class="n">stop</span><span class="p">,</span> <span class="nv">Method</span><span class="p">}</span> <span class="o">-&gt;</span>
+             <span class="k">case</span> <span class="nv">Method</span> <span class="k">of</span>
+                  <span class="n">return</span> <span class="o">-&gt;</span>
+                      <span class="n">true</span><span class="p">;</span>
+                  <span class="nv">Other</span> <span class="o">-&gt;</span>
+                      <span class="nb">exit</span><span class="p">(</span><span class="n">normal</span><span class="p">)</span>
+             <span class="k">end</span><span class="p">;</span>
+         <span class="nv">Other</span> <span class="o">-&gt;</span>
+             <span class="n">process</span><span class="p">()</span>
+    <span class="k">end</span><span class="p">.</span>
+</pre></div>
+</div>
+</div>
+<p><tt class="docutils literal"><span class="pre">my_name</span> <span class="pre">!</span> <span class="pre">{stop,</span> <span class="pre">return}</span></tt></p>
+<blockquote>
+<div>令<tt class="docutils literal"><span class="pre">test:process()</span></tt>返回<tt class="docutils literal"><span class="pre">true</span></tt>，接着进程正常终止。</div></blockquote>
+<p><tt class="docutils literal"><span class="pre">my_name</span> <span class="pre">!</span> <span class="pre">{stop,</span> <span class="pre">hello}</span></tt></p>
+<blockquote>
+<div>也会令进程正常终止，因为它执行了BIF <tt class="docutils literal"><span class="pre">exit(normal)</span></tt>。</div></blockquote>
+<p>任何其它的消息，比如<tt class="docutils literal"><span class="pre">my_name</span> <span class="pre">!</span> <span class="pre">any_other_message</span></tt>都将令进程递归执行<tt class="docutils literal"><span class="pre">test:process()</span></tt>（采用尾递归优化的方式，参见第??章）从而避免进程终止。</p>
+<p>若进程执行BIF <tt class="docutils literal"><span class="pre">exit(Reason)</span></tt>，则进程将异常终止。其中<tt class="docutils literal"><span class="pre">Reason</span></tt>是<strong>除了</strong>原子式<tt class="docutils literal"><span class="pre">normal</span></tt>以外的任意的Erlang项式。如我们所见，在<tt class="docutils literal"><span class="pre">catch</span></tt>上下文中执行<tt class="docutils literal"><span class="pre">exit(Reason)</span></tt>不会导致进程退出。</p>
+<p>进程在执行到会导致运行时失败的代码（如除零错误）时，也会异常终止。后续还会讨论各种类型的运行时失败。</p>
+</div>
+<div class="section" id="id7">
+<h2>链接进程<a class="headerlink" href="#id7" title="永久链接至标题">¶</a></h2>
+<p>进程可以互相监视。这里要引入两个概念，进程<strong>链接</strong>和<tt class="docutils literal"><span class="pre">EXIT</span></tt>信号。在执行期间，进程可以与其他进程（和端口，参见??章节）建立链接。当一个进程终止（无论正常或非正常终止）时，一个特殊的<tt class="docutils literal"><span class="pre">EXIT</span></tt>信号将被发送到所有与即将终止的进程相链接的进程（及端口）。该信号的格式如下：</p>
+<div class="highlight-erlang"><div class="highlight"><pre><span class="p">{</span><span class="n">&#39;EXIT&#39;</span><span class="p">,</span> <span class="nv">Exiting_Process_Id</span><span class="p">,</span> <span class="nv">Reason</span><span class="p">}</span>
+</pre></div>
+</div>
+<p><tt class="docutils literal"><span class="pre">Exiting_Process_Id</span></tt>是即将终止的进程的进程标识，<tt class="docutils literal"><span class="pre">Reason</span></tt>可以是任意的Erlang项式。</p>
+<p>收到<tt class="docutils literal"><span class="pre">Reason</span></tt>不是原子式<tt class="docutils literal"><span class="pre">normal</span></tt>的<tt class="docutils literal"><span class="pre">EXIT</span></tt>信号时，信号接收进程的默认动作是立即终止并，同时向当前与之链接的进程发送<tt class="docutils literal"><span class="pre">EXIT</span></tt>信号。默认情况下，<tt class="docutils literal"><span class="pre">Reason</span></tt>为原子式<tt class="docutils literal"><span class="pre">normal</span></tt>的<tt class="docutils literal"><span class="pre">EXIT</span></tt>信号将被忽略。</p>
+<p><tt class="docutils literal"><span class="pre">EXIT</span></tt>信号的默认处理方式行为可以被覆写，以允许进程在接收到<tt class="docutils literal"><span class="pre">EXIT</span></tt>信号时采取任意必要的动作。</p>
+<div class="section" id="id8">
+<h3>创建和删除链接<a class="headerlink" href="#id8" title="永久链接至标题">¶</a></h3>
+<p>进程可以链接到其它进程和端口。进程间的链接都是双向的，也就是说，如果进程A链接到进程B，那么进程B也会自动链接到进程A。</p>
+<p>通过执行BIF <tt class="docutils literal"><span class="pre">link(Pid)</span></tt>便可创建链接。调用<tt class="docutils literal"><span class="pre">link(Pid)</span></tt>时，若调用进程和<tt class="docutils literal"><span class="pre">Pid</span></tt>之间已经存在链接，则不会产生任何影响。</p>
+<p>进程终止时，它所持有的链接都将被删除。也可以通过执行BIF <tt class="docutils literal"><span class="pre">unlink(Pid)</span></tt>显式删除链接。由于所有链接都是双向的，删除这一端到另一端的链接的同时，另一端的到这一端的链接也会被删除。若调用进程和<tt class="docutils literal"><span class="pre">Pid</span></tt>之间原本就没有链接，<tt class="docutils literal"><span class="pre">unlink(Pid)</span></tt>不会产生任何影响。</p>
+<p>BIF <tt class="docutils literal"><span class="pre">spawn_link/3</span></tt>在创建新进程的同时还会在调用进程和新进程间建立链接。其行为可以定义为：</p>
+<div class="highlight-erlang"><div class="highlight"><pre><span class="nb">spawn_link</span><span class="p">(</span><span class="nv">Module</span><span class="p">,</span> <span class="nv">Function</span><span class="p">,</span> <span class="nv">ArgumentList</span><span class="p">)</span> <span class="o">-&gt;</span>
+    <span class="nb">link</span><span class="p">(</span><span class="nv">Id</span> <span class="o">=</span> <span class="nb">spawn</span><span class="p">(</span><span class="nv">Module</span><span class="p">,</span> <span class="nv">Function</span><span class="p">,</span> <span class="nv">ArgumentList</span><span class="p">)),</span>
+    <span class="nv">Id</span><span class="p">.</span>
+</pre></div>
+</div>
+<p>只不过<tt class="docutils literal"><span class="pre">spawn</span></tt>和<tt class="docutils literal"><span class="pre">link</span></tt>是原子方式执行的。这是为了避免调用进程在执行<tt class="docutils literal"><span class="pre">link</span></tt>之前就被<tt class="docutils literal"><span class="pre">EXIT</span></tt>信号杀死。尝试向一个不存在的进程发起链接将导致信号<tt class="docutils literal"><span class="pre">{'EXIT',</span> <span class="pre">Pid,</span> <span class="pre">noproc}</span></tt>被发送至<tt class="docutils literal"><span class="pre">link(Pid)</span></tt>的调用进程。</p>
+<p>程序7.2中，函数<tt class="docutils literal"><span class="pre">start/1</span></tt>建立了若干以链式互联的进程，其中第一个进程的注册名为<tt class="docutils literal"><span class="pre">start</span></tt>（参见图7.1）。函数<tt class="docutils literal"><span class="pre">test/1</span></tt>向该注册进程发送消息。每个进程不断打印自己在链中的位置及收到的消息。消息<tt class="docutils literal"><span class="pre">stop</span></tt>令链中最后一个进程执行BIF <tt class="docutils literal"><span class="pre">exit(finished)</span></tt>，该BIF将导致该进程异常终止。</p>
+<div class="topic">
+<p class="topic-title first">程序7.2</p>
+<div class="highlight-erlang"><div class="highlight"><pre><span class="p">-</span><span class="ni">module</span><span class="p">(</span><span class="n">normal</span><span class="p">).</span>
+<span class="p">-</span><span class="ni">export</span><span class="p">([</span><span class="n">start</span><span class="o">/</span><span class="mi">1</span><span class="p">,</span> <span class="n">p1</span><span class="o">/</span><span class="mi">1</span><span class="p">,</span> <span class="n">test</span><span class="o">/</span><span class="mi">1</span><span class="p">]).</span>
+
+<span class="nf">start</span><span class="p">(</span><span class="nv">N</span><span class="p">)</span> <span class="o">-&gt;</span>
+    <span class="nb">register</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="nb">spawn_link</span><span class="p">(</span><span class="n">normal</span><span class="p">,</span> <span class="n">p1</span><span class="p">,</span> <span class="p">[</span><span class="nv">N</span> <span class="o">-</span> <span class="mi">1</span><span class="p">])).</span>
+
+<span class="nf">p1</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="o">-&gt;</span>
+    <span class="n">top1</span><span class="p">();</span>
+<span class="nf">p1</span><span class="p">(</span><span class="nv">N</span><span class="p">)</span> <span class="o">-&gt;</span>
+    <span class="n">top</span><span class="p">(</span><span class="nb">spawn_link</span><span class="p">(</span><span class="n">normal</span><span class="p">,</span> <span class="n">p1</span><span class="p">,</span> <span class="p">[</span><span class="nv">N</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]),</span><span class="nv">N</span><span class="p">).</span>
+
+<span class="nf">top</span><span class="p">(</span><span class="nv">Next</span><span class="p">,</span> <span class="nv">N</span><span class="p">)</span> <span class="o">-&gt;</span>
+    <span class="k">receive</span>
+         <span class="nv">X</span> <span class="o">-&gt;</span>
+             <span class="nv">Next</span> <span class="o">!</span> <span class="nv">X</span><span class="p">,</span>
+             <span class="nn">io</span><span class="p">:</span><span class="n">format</span><span class="p">(</span><span class="s">&quot;Process </span><span class="si">~w</span><span class="s"> received </span><span class="si">~w~n</span><span class="s">&quot;</span><span class="p">,</span> <span class="p">[</span><span class="nv">N</span><span class="p">,</span><span class="nv">X</span><span class="p">]),</span>
+             <span class="n">top</span><span class="p">(</span><span class="nv">Next</span><span class="p">,</span><span class="nv">N</span><span class="p">)</span>
+    <span class="k">end</span><span class="p">.</span>
+
+<span class="nf">top1</span><span class="p">()</span> <span class="o">-&gt;</span>
+    <span class="k">receive</span>
+         <span class="n">stop</span> <span class="o">-&gt;</span>
+             <span class="nn">io</span><span class="p">:</span><span class="n">format</span><span class="p">(</span><span class="s">&quot;Last process now exiting </span><span class="si">~n</span><span class="s">&quot;</span><span class="p">,</span> <span class="p">[]),</span>
+             <span class="nb">exit</span><span class="p">(</span><span class="n">finished</span><span class="p">);</span>
+         <span class="nv">X</span> <span class="o">-&gt;</span>
+             <span class="nn">io</span><span class="p">:</span><span class="n">format</span><span class="p">(</span><span class="s">&quot;Last process received </span><span class="si">~w~n</span><span class="s">&quot;</span><span class="p">,</span> <span class="p">[</span><span class="nv">X</span><span class="p">]),</span>
+             <span class="n">top1</span><span class="p">()</span>
+    <span class="k">end</span><span class="p">.</span>
+
+<span class="nf">test</span><span class="p">(</span><span class="nv">Mess</span><span class="p">)</span> <span class="o">-&gt;</span>
+    <span class="n">start</span> <span class="o">!</span> <span class="nv">Mess</span><span class="p">.</span>
+</pre></div>
+</div>
+</div>
+<p>我们启动三个进程（参见图7.1(a)）</p>
+<div class="highlight-erlang"><div class="highlight"><pre><span class="o">&gt;</span> <span class="nn">normal</span><span class="p">:</span><span class="n">start</span><span class="p">(</span><span class="mi">3</span><span class="p">).</span>
+<span class="n">true</span>
+</pre></div>
+</div>
+<div class="figure">
+<img alt="_images/7.1.png" src="_images/7.1.png" />
+<p class="caption">图7.1 进程退出信号的传递</p>
+</div>
+<p>然后向第一个进程发送消息<tt class="docutils literal"><span class="pre">123</span></tt>：</p>
+<div class="highlight-erlang"><div class="highlight"><pre><span class="o">&gt;</span> <span class="nn">normal</span><span class="p">:</span><span class="n">test</span><span class="p">(</span><span class="mi">123</span><span class="p">).</span>
+<span class="nv">Process</span> <span class="mi">2</span> <span class="n">received</span> <span class="mi">123</span>
+<span class="nv">Process</span> <span class="mi">1</span> <span class="n">received</span> <span class="mi">123</span>
+<span class="nv">Last</span> <span class="n">process</span> <span class="n">received</span> <span class="mi">123</span>
+<span class="mi">123</span>
+</pre></div>
+</div>
+<p>再向第一个进程发送消息<tt class="docutils literal"><span class="pre">stop</span></tt>：</p>
+<div class="highlight-erlang"><div class="highlight"><pre><span class="o">&gt;</span> <span class="nn">normal</span><span class="p">:</span><span class="n">test</span><span class="p">(</span><span class="n">stop</span><span class="p">).</span>
+<span class="nv">Process</span> <span class="mi">2</span> <span class="n">received</span> <span class="n">stop</span>
+<span class="nv">Process</span> <span class="mi">1</span> <span class="n">received</span> <span class="n">stop</span>
+<span class="nv">Last</span> <span class="n">process</span> <span class="n">now</span> <span class="n">exiting</span>
+<span class="n">stop</span>
+</pre></div>
+</div>
+<p>这条消息顺着进程链传递下去，我们将看到它最终导致链中最后一个进程的终止。这会引发一个发送给倒数第二个进程的<tt class="docutils literal"><span class="pre">EXIT</span></tt>信号，致其异常终止（图7.1(b)），接着又向第一个进程发送<tt class="docutils literal"><span class="pre">EXIT</span></tt>信号（图7.1(c)），于是注册进程<tt class="docutils literal"><span class="pre">start</span></tt>也异常终止（图 7.1(d)）。</p>
+<p>若这时再向注册进程<tt class="docutils literal"><span class="pre">start</span></tt>发送一条新消息，将由于目标进程不存在而失败：</p>
+<div class="highlight-erlang"><div class="highlight"><pre><span class="o">&gt;</span> <span class="nn">normal</span><span class="p">:</span><span class="n">test</span><span class="p">(</span><span class="mi">456</span><span class="p">).</span>
+<span class="o">!!!</span> <span class="nv">Error</span> <span class="n">in</span> <span class="n">process</span> <span class="o">&lt;</span><span class="mi">0</span><span class="p">.</span><span class="mi">42</span><span class="p">.</span><span class="mi">1</span><span class="o">&gt;</span> <span class="n">in</span> <span class="n">function</span>
+<span class="o">!!!</span>     <span class="nn">normal</span><span class="p">:</span><span class="n">test</span><span class="p">(</span><span class="mi">456</span><span class="p">)</span>
+<span class="o">!!!</span> <span class="n">reason</span> <span class="n">badarg</span>
+<span class="o">**</span> <span class="nn">exited</span><span class="p">:</span> <span class="n">badarg</span> <span class="o">**</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="id9">
+<h2>运行时失败<a class="headerlink" href="#id9" title="永久链接至标题">¶</a></h2>
+<p>如前所述，<tt class="docutils literal"><span class="pre">catch</span></tt>作用域以外的运行时失败将导致进程的异常终止。进程终止时，将向与其链接的所有进程发送<tt class="docutils literal"><span class="pre">EXIT</span></tt>信号。这些信号包括一个指明失败原因的原子式。常见的失败原因如下：</p>
+<p><tt class="docutils literal"><span class="pre">badmatch</span></tt></p>
+<blockquote>
+<div>匹配失败。例如，尝试匹配<tt class="docutils literal"><span class="pre">1</span> <span class="pre">=</span> <span class="pre">3</span></tt>的进程将终止并向链接进程发送<tt class="docutils literal"><span class="pre">EXIT</span></tt>信号<tt class="docutils literal"><span class="pre">{'EXIT',</span> <span class="pre">From,</span> <span class="pre">badmatch}</span></tt>。</div></blockquote>
+<p><tt class="docutils literal"><span class="pre">badarg</span></tt></p>
+<blockquote>
+<div>BIF调用参数错误。例如，执行<tt class="docutils literal"><span class="pre">atom_to_list(123)</span></tt>将导致调用进程终止，并向链接进程发送<tt class="docutils literal"><span class="pre">EXIT</span></tt>信号<tt class="docutils literal"><span class="pre">{'EXIT',</span> <span class="pre">From,</span> <span class="pre">badarg}</span></tt>。因为<tt class="docutils literal"><span class="pre">123</span></tt>不是原子式。</div></blockquote>
+<p><tt class="docutils literal"><span class="pre">case_clause</span></tt></p>
+<blockquote>
+<div><p>缺少匹配的<tt class="docutils literal"><span class="pre">case</span></tt>语句分支。例如，若进程执行：</p>
+<div class="highlight-erlang"><div class="highlight"><pre><span class="nv">M</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span>
+<span class="k">case</span> <span class="nv">M</span> <span class="k">of</span>
+     <span class="mi">1</span> <span class="o">-&gt;</span>
+         <span class="n">yes</span><span class="p">;</span>
+     <span class="mi">2</span> <span class="o">-&gt;</span>
+         <span class="n">no</span>
+<span class="k">end</span><span class="p">.</span>
+</pre></div>
+</div>
+<p>则进程将终止，并向所有链接进程发送<tt class="docutils literal"><span class="pre">EXIT</span></tt>信号<tt class="docutils literal"><span class="pre">{'EXIT',</span> <span class="pre">From,</span> <span class="pre">case_clause}</span></tt>。</p>
+</div></blockquote>
+<p><tt class="docutils literal"><span class="pre">if_clause</span></tt></p>
+<blockquote>
+<div><p>缺少匹配的<tt class="docutils literal"><span class="pre">if</span></tt>语句分支。例如，若进程执行：</p>
+<div class="highlight-erlang"><div class="highlight"><pre><span class="nv">M</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span>
+<span class="k">if</span>
+     <span class="nv">M</span> <span class="o">==</span> <span class="mi">1</span> <span class="o">-&gt;</span>
+         <span class="n">yes</span><span class="p">;</span>
+     <span class="nv">M</span> <span class="o">==</span> <span class="mi">2</span> <span class="o">-&gt;</span>
+         <span class="n">no</span>
+<span class="k">end</span><span class="p">.</span>
+</pre></div>
+</div>
+<p>则进程将终止，并向所有链接进程发送<tt class="docutils literal"><span class="pre">EXIT</span></tt>信号<tt class="docutils literal"><span class="pre">{'EXIT',</span> <span class="pre">From,</span> <span class="pre">if_clause}</span></tt>。</p>
+</div></blockquote>
+<p><tt class="docutils literal"><span class="pre">function_clause</span></tt></p>
+<blockquote>
+<div><p>缺少能够匹配函数调用参数列表的函数首部。例如，对如下的<tt class="docutils literal"><span class="pre">foo/1</span></tt>定义调用<tt class="docutils literal"><span class="pre">foo(3)</span></tt>：</p>
+<div class="highlight-erlang"><div class="highlight"><pre><span class="nf">foo</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">-&gt;</span>
+     <span class="n">yes</span><span class="p">;</span>
+<span class="nf">foo</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">-&gt;</span>
+     <span class="n">no</span><span class="p">.</span>
+</pre></div>
+</div>
+<p>则调用进程终止，并向所有链接进程发送<tt class="docutils literal"><span class="pre">EXIT</span></tt>信号<tt class="docutils literal"><span class="pre">{'EXIT',</span> <span class="pre">From,</span> <span class="pre">function_clause}</span></tt>。</p>
+</div></blockquote>
+<p><tt class="docutils literal"><span class="pre">undef</span></tt></p>
+<blockquote>
+<div>尝试执行未定义函数的进程将终止并向所有链接进程发送<tt class="docutils literal"><span class="pre">{'EXIT',</span> <span class="pre">From,</span> <span class="pre">undef}</span></tt>（参见第??节）。</div></blockquote>
+<p><tt class="docutils literal"><span class="pre">badarith</span></tt></p>
+<blockquote>
+<div>执行非法算术表达式（如，<tt class="docutils literal"><span class="pre">1</span> <span class="pre">+</span> <span class="pre">foo</span></tt>）将导致进程终止，并向所有链接进程发送<tt class="docutils literal"><span class="pre">{'EXIT',</span> <span class="pre">Pid,</span> <span class="pre">badarith}</span></tt>。</div></blockquote>
+<p><tt class="docutils literal"><span class="pre">timeout_value</span></tt></p>
+<blockquote>
+<div><tt class="docutils literal"><span class="pre">receive</span></tt>表达式中出现非法超时值；如超时值既不是整数也不是原子式<tt class="docutils literal"><span class="pre">infinity</span></tt>。</div></blockquote>
+<p><tt class="docutils literal"><span class="pre">nocatch</span></tt></p>
+<blockquote>
+<div>执行了<tt class="docutils literal"><span class="pre">throw</span></tt>语句却没有对应的<tt class="docutils literal"><span class="pre">catch</span></tt>。</div></blockquote>
+</div>
+<div class="section" id="id10">
+<h2>自定义默认的信号接收动作<a class="headerlink" href="#id10" title="永久链接至标题">¶</a></h2>
+<p>BIF <tt class="docutils literal"><span class="pre">process_flag/2</span></tt>可用于自定义进程接收到<tt class="docutils literal"><span class="pre">EXIT</span></tt>信号时所采取的默认行为。如下所述，执行<tt class="docutils literal"><span class="pre">process_flag(trap_exit,true)</span></tt>将改变默认行为，而<tt class="docutils literal"><span class="pre">process_flag(trap_exit,false)</span></tt>重新恢复默认行为。</p>
+<p>如前所述，<tt class="docutils literal"><span class="pre">EXIT</span></tt>信号的格式如下：</p>
+<div class="highlight-erlang"><div class="highlight"><pre><span class="p">{</span><span class="n">&#39;EXIT&#39;</span><span class="p">,</span> <span class="nv">Exiting_Process_Id</span><span class="p">,</span> <span class="nv">Reason</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>调用了<tt class="docutils literal"><span class="pre">process_flag(trap_exit,true)</span></tt>的进程接收到其他进程发送的<tt class="docutils literal"><span class="pre">EXIT</span></tt>信号后<strong>不再</strong>会<strong>自动</strong>终止。所有<tt class="docutils literal"><span class="pre">EXIT</span></tt>信号，包括<tt class="docutils literal"><span class="pre">Reason</span></tt>为原子式<tt class="docutils literal"><span class="pre">normal</span></tt>的信号，都将被转换为消息，进程可以以接收其他消息同样的方式来接收这些消息。程序7.3说明了进程如何互相链接以及执行了<tt class="docutils literal"><span class="pre">process_flag(trap_exit,true)</span></tt>的进程如何接收<tt class="docutils literal"><span class="pre">EXIT</span></tt>信号。</p>
+<div class="highlight-erlang"><div class="highlight"><pre><span class="p">-</span><span class="ni">module</span><span class="p">(</span><span class="n">link_demo</span><span class="p">).</span>
+<span class="p">-</span><span class="ni">export</span><span class="p">([</span><span class="n">start</span><span class="o">/</span><span class="mi">0</span><span class="p">,</span> <span class="n">demo</span><span class="o">/</span><span class="mi">0</span><span class="p">,</span> <span class="n">demonstrate_normal</span><span class="o">/</span><span class="mi">0</span><span class="p">,</span> <span class="n">demonstrate_exit</span><span class="o">/</span><span class="mi">1</span><span class="p">,</span>
+         <span class="n">demonstrate_error</span><span class="o">/</span><span class="mi">0</span><span class="p">,</span> <span class="n">demonstrate_message</span><span class="o">/</span><span class="mi">1</span><span class="p">]).</span>
+
+<span class="nf">start</span><span class="p">()</span> <span class="o">-&gt;</span>
+    <span class="nb">register</span><span class="p">(</span><span class="n">demo</span><span class="p">,</span> <span class="nb">spawn</span><span class="p">(</span><span class="n">link_demo</span><span class="p">,</span> <span class="n">demo</span><span class="p">,</span> <span class="p">[])).</span>
+
+<span class="nf">demo</span><span class="p">()</span> <span class="o">-&gt;</span>
+    <span class="nb">process_flag</span><span class="p">(</span><span class="n">trap_exit</span><span class="p">,</span> <span class="n">true</span><span class="p">),</span>
+    <span class="n">demo1</span><span class="p">().</span>
+
+<span class="nf">demo1</span><span class="p">()</span> <span class="o">-&gt;</span>
+    <span class="k">receive</span>
+         <span class="p">{</span><span class="n">&#39;EXIT&#39;</span><span class="p">,</span> <span class="nv">From</span><span class="p">,</span> <span class="n">normal</span><span class="p">}</span> <span class="o">-&gt;</span>
+             <span class="nn">io</span><span class="p">:</span><span class="n">format</span><span class="p">(</span>
+                 <span class="s">&quot;Demo process received normal exit from </span><span class="si">~w~n</span><span class="s">&quot;</span><span class="p">,</span>
+                 <span class="p">[</span><span class="nv">From</span><span class="p">]),</span>
+             <span class="n">demo1</span><span class="p">();</span>
+         <span class="p">{</span><span class="n">&#39;EXIT&#39;</span><span class="p">,</span> <span class="nv">From</span><span class="p">,</span> <span class="nv">Reason</span><span class="p">}</span> <span class="o">-&gt;</span>
+             <span class="nn">io</span><span class="p">:</span><span class="n">format</span><span class="p">(</span>
+                 <span class="s">&quot;Demo process received exit signal </span><span class="si">~w</span><span class="s"> from </span><span class="si">~w~n</span><span class="s">&quot;</span><span class="p">,</span>
+                 <span class="p">[</span><span class="nv">Reason</span><span class="p">,</span> <span class="nv">From</span><span class="p">]),</span>
+             <span class="n">demo1</span><span class="p">();</span>
+         <span class="n">finished_demo</span> <span class="o">-&gt;</span>
+             <span class="nn">io</span><span class="p">:</span><span class="n">format</span><span class="p">(</span><span class="s">&quot;Demo finished </span><span class="si">~n</span><span class="s">&quot;</span><span class="p">,</span> <span class="p">[]);</span>
+         <span class="nv">Other</span> <span class="o">-&gt;</span>
+             <span class="nn">io</span><span class="p">:</span><span class="n">format</span><span class="p">(</span><span class="s">&quot;Demo process message </span><span class="si">~w~n</span><span class="s">&quot;</span><span class="p">,</span> <span class="p">[</span><span class="nv">Other</span><span class="p">]),</span>
+             <span class="n">demo1</span><span class="p">()</span>
+    <span class="k">end</span><span class="p">.</span>
+
+<span class="nf">demonstrate_normal</span><span class="p">()</span> <span class="o">-&gt;</span>
+    <span class="nb">link</span><span class="p">(</span><span class="nb">whereis</span><span class="p">(</span><span class="n">demo</span><span class="p">)).</span>
+
+<span class="nf">demonstrate_exit</span><span class="p">(</span><span class="nv">What</span><span class="p">)</span> <span class="o">-&gt;</span>
+    <span class="nb">link</span><span class="p">(</span><span class="nb">whereis</span><span class="p">(</span><span class="n">demo</span><span class="p">)),</span>
+    <span class="nb">exit</span><span class="p">(</span><span class="nv">What</span><span class="p">).</span>
+
+<span class="nf">demonstrate_message</span><span class="p">(</span><span class="nv">What</span><span class="p">)</span> <span class="o">-&gt;</span>
+    <span class="n">demo</span> <span class="o">!</span> <span class="nv">What</span><span class="p">.</span>
+
+<span class="nf">demonstrate_error</span><span class="p">()</span> <span class="o">-&gt;</span>
+    <span class="nb">link</span><span class="p">(</span><span class="nb">whereis</span><span class="p">(</span><span class="n">demo</span><span class="p">)),</span>
+    <span class="mi">1</span> <span class="o">=</span> <span class="mi">2</span><span class="p">.</span>
+</pre></div>
+</div>
+<p>示例代码的启动方式如下：</p>
+<div class="highlight-erlang"><div class="highlight"><pre><span class="o">&gt;</span> <span class="nn">link_demo</span><span class="p">:</span><span class="n">start</span><span class="p">().</span>
+<span class="n">true</span>
+</pre></div>
+</div>
+<p><tt class="docutils literal"><span class="pre">link_demo:start()</span></tt>以函数<tt class="docutils literal"><span class="pre">demo/0</span></tt>启动一个进程并用名字<tt class="docutils literal"><span class="pre">demo</span></tt>进行注册。<tt class="docutils literal"><span class="pre">demo/0</span></tt>关闭<tt class="docutils literal"><span class="pre">EXIT</span></tt>信号的默认处理机制并调用<tt class="docutils literal"><span class="pre">demo1/0</span></tt>等待新消息的到来。</p>
+<p>我们来考察一次正常退出过程：</p>
+<div class="highlight-erlang"><div class="highlight"><pre><span class="o">&gt;</span> <span class="nn">link_demo</span><span class="p">:</span><span class="n">demonstrate_normal</span><span class="p">().</span>
+<span class="n">true</span>
+<span class="nv">Demo</span> <span class="n">process</span> <span class="n">received</span> <span class="n">normal</span> <span class="nb">exit</span> <span class="n">from</span> <span class="o">&lt;</span><span class="mi">0</span><span class="p">.</span><span class="mi">13</span><span class="p">.</span><span class="mi">1</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+<p>执行<tt class="docutils literal"><span class="pre">demonstrate_normal/0</span></tt>的进程（在这个例子中该进程由Erlang shell创建）寻找注册进程<tt class="docutils literal"><span class="pre">demo</span></tt>的进程标识并与之建立链接。函数<tt class="docutils literal"><span class="pre">demostrate_normal/0</span></tt>没有别的子句，它的执行进程无事可做因而正常终止，从而引发信号：</p>
+<div class="highlight-erlang"><div class="highlight"><pre><span class="p">{</span><span class="n">&#39;EXIT&#39;</span><span class="p">,</span> <span class="nv">Process_Id</span><span class="p">,</span> <span class="n">normal</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>该信号被发送到注册进程<tt class="docutils literal"><span class="pre">demo</span></tt>。注册进程<tt class="docutils literal"><span class="pre">demo</span></tt>正在等待<tt class="docutils literal"><span class="pre">EXIT</span></tt>信号，因此它将之转换为一条消息，该消息在函数<tt class="docutils literal"><span class="pre">demo1/0</span></tt>内被接收，并输出文本（参见图7.2）：</p>
+<div class="highlight-erlang"><div class="highlight"><pre><span class="nv">Demo</span> <span class="n">process</span> <span class="n">received</span> <span class="n">normal</span> <span class="nb">exit</span> <span class="n">from</span> <span class="o">&lt;</span><span class="mi">0</span><span class="p">.</span><span class="mi">13</span><span class="p">.</span><span class="mi">1</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+<p>接着<tt class="docutils literal"><span class="pre">demo1/0</span></tt>继续递归调用自身。</p>
+<div class="figure">
+<img alt="_images/7.2.png" src="_images/7.2.png" />
+<p class="caption">图7.2 正常退出信号</p>
+</div>
+<p>下面再来考察一次异常退出过程：</p>
+<div class="highlight-erlang"><div class="highlight"><pre><span class="o">&gt;</span> <span class="nn">link_demo</span><span class="p">:</span><span class="n">demonstrate_exit</span><span class="p">(</span><span class="n">hello</span><span class="p">).</span>
+<span class="nv">Demo</span> <span class="n">process</span> <span class="n">received</span> <span class="nb">exit</span> <span class="n">signal</span> <span class="n">hello</span> <span class="n">from</span> <span class="o">&lt;</span><span class="mi">0</span><span class="p">.</span><span class="mi">14</span><span class="p">.</span><span class="mi">1</span><span class="o">&gt;</span>
+<span class="o">**</span> <span class="nn">exited</span><span class="p">:</span> <span class="n">hello</span> <span class="o">**</span>
+</pre></div>
+</div>
+<p>和<tt class="docutils literal"><span class="pre">demonstrate_normal/0</span></tt>相同，<tt class="docutils literal"><span class="pre">demonstrate_exit/1</span></tt>创建一个到注册进程<tt class="docutils literal"><span class="pre">demo</span></tt>的链接。该例中，<tt class="docutils literal"><span class="pre">demonstrate_exit/1</span></tt>通过<tt class="docutils literal"><span class="pre">exit(hello)</span></tt>调用BIF <tt class="docutils literal"><span class="pre">exit/1</span></tt>。这导致<tt class="docutils literal"><span class="pre">demostrate_exit/1</span></tt>的执行进程异常终止，并将信号：</p>
+<div class="highlight-erlang"><div class="highlight"><pre><span class="p">{</span><span class="n">&#39;EXIT&#39;</span><span class="p">,</span> <span class="nv">Process_Id</span><span class="p">,</span> <span class="n">hello</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>发送给注册进程<tt class="docutils literal"><span class="pre">demo</span></tt>（参见图7.3）。注册进程<tt class="docutils literal"><span class="pre">demo</span></tt>将该信号转换为消息，并在函数<tt class="docutils literal"><span class="pre">demo1/0</span></tt>内被接收，从而输出文本：</p>
+<div class="highlight-erlang"><div class="highlight"><pre><span class="nv">Demo</span> <span class="n">process</span> <span class="n">received</span> <span class="nb">exit</span> <span class="n">signal</span> <span class="n">hello</span> <span class="n">from</span> <span class="o">&lt;</span><span class="mi">0</span><span class="p">.</span><span class="mi">14</span><span class="p">.</span><span class="mi">1</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+<p>接着<tt class="docutils literal"><span class="pre">demo1/0</span></tt>继续递归调用自身。</p>
+<div class="figure">
+<img alt="_images/7.3.png" src="_images/7.3.png" />
+<p class="caption">图7.3 执行<tt class="docutils literal"><span class="pre">exit(hello)</span></tt></p>
+</div>
+<p>下一个案例中（如图7.4）我们将看到<tt class="docutils literal"><span class="pre">link_demo:demonstrate_normal()</span></tt>和<tt class="docutils literal"><span class="pre">link_demo:demonstrate_exit(normal)</span></tt>是等同的：</p>
+<div class="highlight-erlang"><div class="highlight"><pre><span class="o">&gt;</span> <span class="nn">link_demo</span><span class="p">:</span><span class="n">demonstrate_exit</span><span class="p">(</span><span class="n">normal</span><span class="p">).</span>
+<span class="nv">Demo</span> <span class="n">process</span> <span class="n">received</span> <span class="n">normal</span> <span class="nb">exit</span> <span class="n">from</span> <span class="o">&lt;</span><span class="mi">0</span><span class="p">.</span><span class="mi">13</span><span class="p">.</span><span class="mi">1</span><span class="o">&gt;</span>
+<span class="o">**</span> <span class="nn">exited</span><span class="p">:</span> <span class="n">normal</span> <span class="o">**</span>
+</pre></div>
+</div>
+<div class="figure">
+<img alt="_images/7.4.png" src="_images/7.4.png" />
+<p class="caption">图7.4 执行<tt class="docutils literal"><span class="pre">exit(normal)</span></tt></p>
+</div>
+<p>下一个案例将展示出现运行时错误时，会发生什么事：</p>
+<div class="highlight-erlang"><div class="highlight"><pre><span class="o">&gt;</span> <span class="nn">link_demo</span><span class="p">:</span><span class="n">demonstrate_error</span><span class="p">().</span>
+<span class="o">!!!</span> <span class="nv">Error</span> <span class="n">in</span> <span class="n">process</span> <span class="o">&lt;</span><span class="mi">0</span><span class="p">.</span><span class="mi">17</span><span class="p">.</span><span class="mi">1</span><span class="o">&gt;</span> <span class="n">in</span> <span class="n">function</span>
+<span class="o">!!!</span>     <span class="nn">link_demo</span><span class="p">:</span><span class="n">demonstrate_error</span><span class="p">()</span>
+<span class="o">!!!</span> <span class="n">reason</span> <span class="n">badmatch</span>
+<span class="o">**</span> <span class="nn">exited</span><span class="p">:</span> <span class="n">badmatch</span> <span class="o">**</span>
+<span class="nv">Demo</span> <span class="n">process</span> <span class="n">received</span> <span class="nb">exit</span> <span class="n">signal</span> <span class="n">badmatch</span> <span class="n">from</span> <span class="o">&lt;</span><span class="mi">0</span><span class="p">.</span><span class="mi">17</span><span class="p">.</span><span class="mi">1</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+<p>向前面一样，<tt class="docutils literal"><span class="pre">link_demo:demonstrate_error/0</span></tt>创建一个到注册进程<tt class="docutils literal"><span class="pre">demo</span></tt>的链接。<tt class="docutils literal"><span class="pre">link_demo:demonstrate_error/0</span></tt>错误地试图匹配<tt class="docutils literal"><span class="pre">1</span> <span class="pre">=</span> <span class="pre">2</span></tt>。 该错误导致<tt class="docutils literal"><span class="pre">link_demo:demonstrate_error/0</span></tt>的执行进程异常终止，并发送信号<tt class="docutils literal"><span class="pre">{'EXIT',</span> <span class="pre">Process_Id,</span> <span class="pre">badmatch}</span></tt>至注册进程<tt class="docutils literal"><span class="pre">demo</span></tt>（参见图7.5）。</p>
+<div class="figure">
+<img alt="_images/7.5.png" src="_images/7.5.png" />
+<p class="caption">图7.5 匹配错误导致的进程失败</p>
+</div>
+<p>下一个案例中我们简单地向正在等待消息的注册进程<tt class="docutils literal"><span class="pre">demo</span></tt>发送消息<tt class="docutils literal"><span class="pre">hello</span></tt>：</p>
+<div class="highlight-erlang"><div class="highlight"><pre><span class="o">&gt;</span> <span class="nn">link_demo</span><span class="p">:</span><span class="n">demonstrate_message</span><span class="p">(</span><span class="n">hello</span><span class="p">).</span>
+<span class="nv">Demo</span> <span class="n">process</span> <span class="n">message</span> <span class="n">hello</span>
+<span class="n">hello</span>
+</pre></div>
+</div>
+<p>没有链接被创建，也就没有<tt class="docutils literal"><span class="pre">EXIT</span></tt>信号被发送或被接收。</p>
+<p>通过以下调用来结束这个示例：</p>
+<div class="highlight-erlang"><div class="highlight"><pre><span class="o">&gt;</span> <span class="nn">link_demo</span><span class="p">:</span><span class="n">demonstrate_message</span><span class="p">(</span><span class="n">finished_demo</span><span class="p">).</span>
+<span class="nv">Demo</span> <span class="n">finished</span>
+<span class="n">finished_demo</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="id11">
+<h2>未定义函数和未注册名称<a class="headerlink" href="#id11" title="永久链接至标题">¶</a></h2>
+<p>最后一类错误关注的是当进程试图执行一个未定义的函数或者给一个未注册的名称发送消息时会发生什么。</p>
+<div class="section" id="id12">
+<h3>调用未定义函数<a class="headerlink" href="#id12" title="永久链接至标题">¶</a></h3>
+<p>如果进程尝试调用<tt class="docutils literal"><span class="pre">Mod:Func(Arg0,...,ArgN)</span></tt>，而该函数未被定义，则该调用被转换为：</p>
+<div class="highlight-erlang"><div class="highlight"><pre><span class="nn">error_handler</span><span class="p">:</span><span class="n">undefined_function</span><span class="p">(</span><span class="nv">Mod</span><span class="p">,</span> <span class="nv">Func</span><span class="p">,</span> <span class="p">[</span><span class="nv">Arg0</span><span class="p">,...,</span><span class="nv">ArgN</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>假设模块<tt class="docutils literal"><span class="pre">error_handler</span></tt>已经被加载（标准发行版中预定义了<tt class="docutils literal"><span class="pre">error_handler</span></tt>模块）。<tt class="docutils literal"><span class="pre">error_handler</span></tt>模块可以被定义为程序7.4。</p>
+<div class="topic">
+<p class="topic-title first">程序 7.4</p>
+<div class="highlight-erlang"><div class="highlight"><pre><span class="p">-</span><span class="ni">module</span><span class="p">(</span><span class="n">error_handler</span><span class="p">).</span>
+<span class="p">-</span><span class="ni">export</span><span class="p">([</span><span class="n">undefined_function</span><span class="o">/</span><span class="mi">3</span><span class="p">]).</span>
+
+<span class="nf">undefined_function</span><span class="p">(</span><span class="nv">Module</span><span class="p">,</span> <span class="nv">Func</span><span class="p">,</span> <span class="nv">Args</span><span class="p">)</span> <span class="o">-&gt;</span>
+    <span class="k">case</span> <span class="nn">code</span><span class="p">:</span><span class="n">is_loaded</span><span class="p">(</span><span class="nv">Module</span><span class="p">)</span> <span class="k">of</span>
+        <span class="p">{</span><span class="n">file</span><span class="p">,</span><span class="nv">File</span><span class="p">}</span> <span class="o">-&gt;</span>
+           <span class="c">% the module is loaded but not the function</span>
+           <span class="nn">io</span><span class="p">:</span><span class="n">format</span><span class="p">(</span><span class="s">&quot;error undefined function:</span><span class="si">~w</span><span class="s"> </span><span class="si">~w</span><span class="s"> </span><span class="si">~w</span><span class="s">&quot;</span><span class="p">,</span>
+                 <span class="p">[</span><span class="nv">Module</span><span class="p">,</span> <span class="nv">Func</span><span class="p">,</span> <span class="nv">Args</span><span class="p">]),</span>
+           <span class="nb">exit</span><span class="p">({</span><span class="n">undefined_function</span><span class="p">,{</span><span class="nv">Module</span><span class="p">,</span><span class="nv">Func</span><span class="p">,</span><span class="nv">Args</span><span class="p">}});</span>
+        <span class="n">false</span> <span class="o">-&gt;</span>
+           <span class="k">case</span> <span class="nn">code</span><span class="p">:</span><span class="n">load_file</span><span class="p">(</span><span class="nv">Module</span><span class="p">)</span> <span class="k">of</span>
+                 <span class="p">{</span><span class="n">module</span><span class="p">,</span> <span class="p">_}</span> <span class="o">-&gt;</span>
+                     <span class="nb">apply</span><span class="p">(</span><span class="nv">Module</span><span class="p">,</span> <span class="nv">Func</span><span class="p">,</span> <span class="nv">Args</span><span class="p">);</span>
+                 <span class="p">{</span><span class="n">error</span><span class="p">,</span> <span class="p">_}</span> <span class="o">-&gt;</span>
+                     <span class="nn">io</span><span class="p">:</span><span class="n">format</span><span class="p">(</span><span class="s">&quot;error undefined module:</span><span class="si">~w</span><span class="s">&quot;</span><span class="p">,</span>
+                     <span class="p">[</span><span class="nv">Module</span><span class="p">]),</span>
+                     <span class="nb">exit</span><span class="p">({</span><span class="n">undefined_module</span><span class="p">,</span> <span class="nv">Module</span><span class="p">})</span>
+           <span class="k">end</span>
+     <span class="k">end</span><span class="p">.</span>
+</pre></div>
+</div>
+</div>
+<p>如果模块<tt class="docutils literal"><span class="pre">Mod</span></tt>已经被加载，那么将导致一个运行时错误。如果模块尚未加载，那么首先尝试加载该模块，若加载成功，再尝试执行先前调用的函数。</p>
+<p>模块<tt class="docutils literal"><span class="pre">code</span></tt>了解哪些模块已被加载，同时也负责代码加载。</p>
+</div>
+<div class="section" id="id13">
+<h3>自动加载<a class="headerlink" href="#id13" title="永久链接至标题">¶</a></h3>
+<p>编译过的函数无需再显式地编译或“加载”相关模块即可直接用于后续的会话。模块中的<strong>导出</strong>函数被第一次调用时，该模块将（通过上述的机制）被自动加载。</p>
+<p>要实现自动加载，必须满足两个条件：首先，包含Erlang模块的源码文件必须与模块同名（扩展名必须为<tt class="docutils literal"><span class="pre">.erl</span></tt>）；其次，系统使用的默认搜索路径必须能定位到该未知模块。</p>
+</div>
+<div class="section" id="id14">
+<h3>向未注册名称发送消息<a class="headerlink" href="#id14" title="永久链接至标题">¶</a></h3>
+<p>尝试向一个不存在的注册进程发送消息时会触发<tt class="docutils literal"><span class="pre">error_handler:unregistered_name(Name,Pid,Message)</span></tt>调用。其中<tt class="docutils literal"><span class="pre">Name</span></tt>是不存在的注册进程的名称，<tt class="docutils literal"><span class="pre">Pid</span></tt>是发送消息的进程标识，<tt class="docutils literal"><span class="pre">Message</span></tt>是发送给注册进程的消息。</p>
+</div>
+<div class="section" id="id15">
+<h3>自定义缺省行为<a class="headerlink" href="#id15" title="永久链接至标题">¶</a></h3>
+<p>执行BIF <tt class="docutils literal"><span class="pre">process_flag(error_handler,</span> <span class="pre">MyMod)</span></tt>可以用模块<tt class="docutils literal"><span class="pre">MyMod</span></tt>替换默认的<tt class="docutils literal"><span class="pre">error_handler</span></tt>。这使得用户得以定义他们（私有）的错误处理器，用以处理针对未定义函数的调用以及以为注册进程名称为目标的消息发送。该功能仅对执行调用的进程<strong>自身</strong>有效。定义非标准的错误处理器时必须注意：如果你在替换标准错误处理器时犯了什么错误，系统可能会失控！</p>
+<p>也可以通过加载一个新版本的<tt class="docutils literal"><span class="pre">error_handler</span></tt>模块来更改默认行为。这么做会影响到所有的进程（定义了私有错误处理器的进程出外），因此非常危险。</p>
+</div>
+<div class="section" id="catch">
+<h3>Catch和退出信号捕获<a class="headerlink" href="#catch" title="永久链接至标题">¶</a></h3>
+<p>在<tt class="docutils literal"><span class="pre">catch</span></tt>作用域内求值和捕获进程退出信号是两种完全不同的错误处理机制。退出信号的捕获影响的是一个进程从其他进程处收到<tt class="docutils literal"><span class="pre">EXIT</span></tt>信号时的动作。<tt class="docutils literal"><span class="pre">catch</span></tt>只影响当前进程中由<tt class="docutils literal"><span class="pre">catch</span></tt>保护的表达式的求值。</p>
+<p>执行程序7.5里的<tt class="docutils literal"><span class="pre">tt:test()</span></tt>会创建一个进程，这个进程匹配<tt class="docutils literal"><span class="pre">N</span></tt>（它的值是<tt class="docutils literal"><span class="pre">1</span></tt>）和<tt class="docutils literal"><span class="pre">2</span></tt>。这会失败的，引发信号<tt class="docutils literal"><span class="pre">{'EXIT',Pid,badmatch}</span></tt>被发送到执行<tt class="docutils literal"><span class="pre">tt:test()</span></tt>并且正在等待一个信号的进程。如果这个进程没有正在捕获<tt class="docutils literal"><span class="pre">exits</span></tt>，它也会非正常终止。</p>
+<div class="topic">
+<p class="topic-title first">程序 7.5</p>
+<div class="highlight-erlang"><div class="highlight"><pre><span class="p">-</span><span class="ni">module</span><span class="p">(</span><span class="n">tt</span><span class="p">).</span>
+<span class="p">-</span><span class="ni">export</span><span class="p">([</span><span class="n">test</span><span class="o">/</span><span class="mi">0</span><span class="p">,</span> <span class="n">p</span><span class="o">/</span><span class="mi">1</span><span class="p">]).</span>
+
+<span class="nf">test</span><span class="p">()</span> <span class="o">-&gt;</span>
+    <span class="nb">spawn_link</span><span class="p">(</span><span class="n">tt</span><span class="p">,</span> <span class="n">p</span><span class="p">,[</span><span class="mi">1</span><span class="p">]),</span>
+    <span class="k">receive</span>
+         <span class="nv">X</span> <span class="o">-&gt;</span>
+              <span class="nv">X</span>
+    <span class="k">end</span><span class="p">.</span>
+
+<span class="nf">p</span><span class="p">(</span><span class="nv">N</span><span class="p">)</span> <span class="o">-&gt;</span>
+    <span class="nv">N</span> <span class="o">=</span> <span class="mi">2</span><span class="p">.</span>
+</pre></div>
+</div>
+</div>
+<p>调用程序7.5中的<tt class="docutils literal"><span class="pre">tt:test()</span></tt>将创建一个以<tt class="docutils literal"><span class="pre">2</span></tt>对<tt class="docutils literal"><span class="pre">N</span></tt>（值为<tt class="docutils literal"><span class="pre">1</span></tt>）作匹配的链接进程。这会失败，并导致信号<tt class="docutils literal"><span class="pre">{'EXIT',Pid,badmatch}</span></tt>被发送至调用<tt class="docutils literal"><span class="pre">tt:test()</span></tt>的进程，该进程正在等待消息。要是这个进程不捕获退出信号，它就会异常退出。</p>
+<p>如果我们执行的不是<tt class="docutils literal"><span class="pre">tt:test()</span></tt>而是<tt class="docutils literal"><span class="pre">catch</span> <span class="pre">tt:test()</span></tt>，结果一样：<tt class="docutils literal"><span class="pre">catch</span></tt>作用域外的另一个进程会发生匹配失败。在<tt class="docutils literal"><span class="pre">spawn_link(tt,p,[1])</span></tt>之前加上<tt class="docutils literal"><span class="pre">process_flag(trap_exit,</span> <span class="pre">true)</span></tt>，<tt class="docutils literal"><span class="pre">tt:test()</span></tt>就会将收到的<tt class="docutils literal"><span class="pre">{'EXIT',Pid,badmatch}</span></tt>信号转换为一条消息。</p>
+<p class="rubric">脚注</p>
+<table class="docutils footnote" frame="void" id="id16" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id2">[1]</a></td><td>这不是bug或未录入文档的功能！</td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id17" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id4">[2]</a></td><td>这个错误可能导致当前shell崩溃。如何避免这个错误是留给读者的练习。</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">內容目录</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">第7章 错误处理</a><ul>
+<li><a class="reference internal" href="#catch-throw">Catch和Throw</a><ul>
+<li><a class="reference internal" href="#id3">使用catch和throw抵御不良代码</a></li>
+<li><a class="reference internal" href="#id5">使用catch和throw实现函数的非本地返回</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#id6">进程终止</a></li>
+<li><a class="reference internal" href="#id7">链接进程</a><ul>
+<li><a class="reference internal" href="#id8">创建和删除链接</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#id9">运行时失败</a></li>
+<li><a class="reference internal" href="#id10">自定义默认的信号接收动作</a></li>
+<li><a class="reference internal" href="#id11">未定义函数和未注册名称</a><ul>
+<li><a class="reference internal" href="#id12">调用未定义函数</a></li>
+<li><a class="reference internal" href="#id13">自动加载</a></li>
+<li><a class="reference internal" href="#id14">向未注册名称发送消息</a></li>
+<li><a class="reference internal" href="#id15">自定义缺省行为</a></li>
+<li><a class="reference internal" href="#catch">Catch和退出信号捕获</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>上一个主题</h4>
+  <p class="topless"><a href="part-i_chapter-6.html"
+                        title="上一章">第6章 分布式编程</a></p>
+  <h4>下一个主题</h4>
+  <p class="topless"><a href="part-i_chapter-8.html"
+                        title="下一章">第8章 编写健壮的应用程序</a></p>
+<div id="searchbox" style="display: none">
+  <h3>快速搜索</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="搜索" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    输入相关的模块，术语，类或者函数名称进行搜索
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>导航</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="part-i_chapter-8.html" title="第8章 编写健壮的应用程序"
+             >下一页</a></li>
+        <li class="right" >
+          <a href="part-i_chapter-6.html" title="第6章 分布式编程"
+             >上一页</a> |</li>
+        <li><a href="index.html">Erlang并发编程</a> &raquo;</li>
+          <li><a href="part-i_index.html" >第 I 部分 编程</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; 版权所有 2009, CPiE-CN志愿译者团队.
+      使用 <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+    </div>
+  </body>
+</html>

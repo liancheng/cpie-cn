@@ -1,0 +1,139 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>序言 &mdash; Erlang并发编程</title>
+    <link rel="stylesheet" href="_static/nature-ext.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '1.0.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/translations.js"></script>
+    <link rel="top" title="Erlang并发编程" href="index.html" />
+    <link rel="next" title="致谢" href="acknowledgements.html" />
+    <link rel="prev" title="《Erlang并发编程》翻译计划" href="cpie-cn-project.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>导航</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="acknowledgements.html" title="致谢"
+             accesskey="N">下一页</a></li>
+        <li class="right" >
+          <a href="cpie-cn-project.html" title="《Erlang并发编程》翻译计划"
+             accesskey="P">上一页</a> |</li>
+        <li><a href="index.html">Erlang并发编程</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="id1">
+<h1>序言<a class="headerlink" href="#id1" title="永久链接至标题">¶</a></h1>
+<p>Erlang<a class="footnote-reference" href="#id5" id="id2">[1]</a>是由Ericsson and Ellemtel计算机科学实验室的成员为并发分布式系统编程而开发的一种申明式语言。</p>
+<p>开发Erlang最初是为了调研现代申明式编程范式是否适用于大型工业电信交换系统的编程。而我们很快便发现适用于电信系统编程的语言也同样适用于大量工业嵌入式实时控制问题。</p>
+<p>Erlang的许多原语为大型并发实时系统开发中的一些常见问题提供了解决方案。其<strong>模块</strong>系统令大型系统得以分解为粒度更可控的单元。其<strong>错误检测</strong>机制用于构建容错软件。其<strong>代码加载</strong>原语允许在运行时不停机地升级系统代码<a class="footnote-reference" href="#id6" id="id3">[2]</a>。</p>
+<p>Erlang具备一套基于进程的并发模型。在这套模型中，并发性是显式的，用户可以精确地控制哪些计算串行哪些计算并行；进程间的消息传递则是异步的，即发送进程一发完消息就立即继续执行。</p>
+<p>Erlang进程交换数据的唯一方式就是消息传递。这样一来，应用可以很容易地做到分布式——为单处理器编写的应用可以容易地迁移到多处理器或单处理器网络上。语言中提供的内建机制简化了分布式应用的编写，使得应用既可运行于单机也可运行于计算机网络中。</p>
+<p>Erlang的变量具有单次赋值属性<a class="footnote-reference" href="#id7" id="id4">[3]</a>——变量一旦被赋值就不可再被更改。该属性对于调试变更中的应用有重要的影响。</p>
+<p>程序是完全以<strong>函数</strong>的方式编写的——函数的选择通过模式匹配来完成，如此一来程序可以非常的简洁紧凑。</p>
+<p>Erlang系统具备内建的时间观念——程序员可以指定一个进程在采取某种行动之前需要等待某条消息多久。这就允许了实时系统的开发。Erlang适用于大多数响应时间为毫秒级的<strong>软</strong>实时系统。</p>
+<p>有关Erlang的最新信息可通过<a class="reference external" href="http://www.ericsson.se/erlang">http://www.ericsson.se/erlang</a>获取，e-mail咨询可发送至<a class="reference external" href="mailto:erlang&#37;&#52;&#48;erix&#46;ericsson&#46;se">erlang<span>&#64;</span>erix<span>&#46;</span>ericsson<span>&#46;</span>se</a>。</p>
+<p style="text-align: right">
+  Joe Armstrong<br>
+  Robert Virding<br>
+  Claes Wikstr&#x0151;m<br>
+  Mike Williams<br>
+  Computer Science Laboratory<br>
+  Erricson Telecommunications Systems Laboratories<br>
+  Box 1505<br>
+  S-125 25 &#x00c4;lvsj&#x0151;<br>
+  Sweden<br>
+  <a href="mailto:erlang@erix.ericsson.se">
+    <code>erlang@erix.ericsson.se</code>
+  </a>
+  <br/>
+</p><table class="docutils footnote" frame="void" id="id5" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id2">[1]</a></td><td>Agner Krarup Erlang (1878-1929)，丹麦数学家，发展了统计均衡中的随机过程理论——他的理论被广泛地应用于电信业。</td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id6" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id3">[2]</a></td><td>这对于电话交换机或空中交通控制系统等嵌入式实时系统非常重要——通常情况下，这些系统是不能因为软件维护而停机的。</td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id7" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id4">[3]</a></td><td>也叫做write-once variable或non-destructive assignment。</td></tr>
+</tbody>
+</table>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>上一个主题</h4>
+  <p class="topless"><a href="cpie-cn-project.html"
+                        title="上一章">《Erlang并发编程》翻译计划</a></p>
+  <h4>下一个主题</h4>
+  <p class="topless"><a href="acknowledgements.html"
+                        title="下一章">致谢</a></p>
+<div id="searchbox" style="display: none">
+  <h3>快速搜索</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="搜索" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    输入相关的模块，术语，类或者函数名称进行搜索
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>导航</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="acknowledgements.html" title="致谢"
+             >下一页</a></li>
+        <li class="right" >
+          <a href="cpie-cn-project.html" title="《Erlang并发编程》翻译计划"
+             >上一页</a> |</li>
+        <li><a href="index.html">Erlang并发编程</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; 版权所有 2009, CPiE-CN志愿译者团队.
+      使用 <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+    </div>
+  </body>
+</html>

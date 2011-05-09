@@ -1,0 +1,501 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>附录A Erlang 语法参考 &mdash; Erlang并发编程</title>
+    <link rel="stylesheet" href="_static/nature-ext.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '1.0.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/translations.js"></script>
+    <link rel="top" title="Erlang并发编程" href="index.html" />
+    <link rel="up" title="第 I 部分 编程" href="part-i_index.html" />
+    <link rel="next" title="附录B 内置函数" href="part-i_appendix-b.html" />
+    <link rel="prev" title="第9章 杂项" href="part-i_chapter-9.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>导航</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="part-i_appendix-b.html" title="附录B 内置函数"
+             accesskey="N">下一页</a></li>
+        <li class="right" >
+          <a href="part-i_chapter-9.html" title="第9章 杂项"
+             accesskey="P">上一页</a> |</li>
+        <li><a href="index.html">Erlang并发编程</a> &raquo;</li>
+          <li><a href="part-i_index.html" accesskey="U">第 I 部分 编程</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="a-erlang">
+<h1>附录A Erlang 语法参考<a class="headerlink" href="#a-erlang" title="永久链接至标题">¶</a></h1>
+<p>这部分语法参考是 LALR 语法的改编版本。</p>
+<p>此语法和严格的 LALR 语法对 <tt class="docutils literal"><span class="pre">match_expr</span></tt> 有不同理解。 <tt class="docutils literal"><span class="pre">match_expr</span></tt> 中等号左边可以是一个模式或者表达式， Erlang 编译器会在语义分析时确定其含义。</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="30%" />
+<col width="30%" />
+<col width="40%" />
+</colgroup>
+<thead valign="bottom">
+<tr><th class="head">类型</th>
+<th class="head">优先级</th>
+<th class="head">运算符</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr><td>Nonassoc</td>
+<td>0</td>
+<td><tt class="docutils literal"><span class="pre">'catch'.</span></tt></td>
+</tr>
+<tr><td>Right</td>
+<td>200</td>
+<td><tt class="docutils literal"><span class="pre">'='.</span></tt></td>
+</tr>
+<tr><td>Right</td>
+<td>200</td>
+<td><tt class="docutils literal"><span class="pre">'!'.</span></tt></td>
+</tr>
+<tr><td>Left</td>
+<td>300</td>
+<td><tt class="docutils literal"><span class="pre">add</span> <span class="pre">op.</span></tt></td>
+</tr>
+<tr><td>Left</td>
+<td>400</td>
+<td><tt class="docutils literal"><span class="pre">mult</span> <span class="pre">op.</span></tt></td>
+</tr>
+<tr><td>Nonassoc</td>
+<td>500</td>
+<td><tt class="docutils literal"><span class="pre">prefix</span> <span class="pre">op.</span></tt></td>
+</tr>
+</tbody>
+</table>
+<hr class="docutils" />
+<table border="1" class="docutils">
+<colgroup>
+<col width="10%" />
+<col width="20%" />
+<col width="70%" />
+</colgroup>
+<thead valign="bottom">
+<tr><th class="head">编号</th>
+<th class="head">非终结符</th>
+<th class="head">表达式</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr><td>1</td>
+<td><tt class="docutils literal"><span class="pre">add</span> <span class="pre">op</span></tt></td>
+<td><tt class="docutils literal"><span class="pre">:=</span> <span class="pre">&quot;+&quot;</span> <span class="pre">|</span> <span class="pre">&quot;-&quot;</span> <span class="pre">|</span> <span class="pre">&quot;bor&quot;</span> <span class="pre">|</span> <span class="pre">&quot;bxor&quot;</span> <span class="pre">|</span> <span class="pre">&quot;bsl&quot;</span> <span class="pre">|</span> <span class="pre">&quot;bsr&quot;</span></tt></td>
+</tr>
+<tr><td>2</td>
+<td><tt class="docutils literal"><span class="pre">comp_op</span></tt></td>
+<td><tt class="docutils literal"><span class="pre">:=</span> <span class="pre">&quot;==&quot;</span> <span class="pre">|</span> <span class="pre">&quot;/=&quot;</span> <span class="pre">|</span> <span class="pre">&quot;=&lt;&quot;</span> <span class="pre">|</span> <span class="pre">&quot;&lt;&quot;</span> <span class="pre">|</span> <span class="pre">&quot;&gt;=&quot;</span> <span class="pre">|</span> <span class="pre">&quot;&gt;&quot;</span> <span class="pre">|</span> <span class="pre">&quot;=:=&quot;</span> <span class="pre">|</span> <span class="pre">&quot;=/=&quot;</span></tt></td>
+</tr>
+<tr><td>3</td>
+<td><tt class="docutils literal"><span class="pre">mult_op</span></tt></td>
+<td><tt class="docutils literal"><span class="pre">:=</span> <span class="pre">&quot;*&quot;</span> <span class="pre">|</span> <span class="pre">&quot;/&quot;</span> <span class="pre">|</span> <span class="pre">&quot;div&quot;</span> <span class="pre">|</span> <span class="pre">&quot;rem&quot;</span> <span class="pre">|</span> <span class="pre">&quot;band&quot;</span></tt></td>
+</tr>
+<tr><td>4</td>
+<td><tt class="docutils literal"><span class="pre">prefix_op</span></tt></td>
+<td><tt class="docutils literal"><span class="pre">:=</span> <span class="pre">&quot;+&quot;</span> <span class="pre">|</span> <span class="pre">&quot;-&quot;</span> <span class="pre">|</span> <span class="pre">&quot;bnot&quot;</span></tt></td>
+</tr>
+<tr><td>5</td>
+<td><tt class="docutils literal"><span class="pre">basic_type</span></tt></td>
+<td><tt class="docutils literal"><span class="pre">:=</span> <span class="pre">&quot;atom&quot;</span> <span class="pre">|</span> <span class="pre">&quot;number&quot;</span> <span class="pre">|</span> <span class="pre">&quot;string&quot;</span> <span class="pre">|</span> <span class="pre">&quot;var&quot;</span> <span class="pre">|</span> <span class="pre">&quot;true&quot;</span></tt></td>
+</tr>
+<tr><td>6</td>
+<td><tt class="docutils literal"><span class="pre">pattern</span></tt></td>
+<td><tt class="docutils literal"><span class="pre">:=</span> <span class="pre">basic_type</span> <span class="pre">|</span> <span class="pre">pattern_list</span> <span class="pre">|</span> <span class="pre">pattern_tuple</span></tt></td>
+</tr>
+<tr><td>7</td>
+<td><tt class="docutils literal"><span class="pre">pattern_list</span></tt></td>
+<td><tt class="docutils literal"><span class="pre">:=</span> <span class="pre">&quot;[&quot;</span> <span class="pre">&quot;]&quot;</span> <span class="pre">|</span> <span class="pre">&quot;[&quot;</span> <span class="pre">pattern</span> <span class="pre">pattern</span> <span class="pre">tail</span> <span class="pre">&quot;]&quot;</span></tt></td>
+</tr>
+<tr><td>8</td>
+<td><tt class="docutils literal"><span class="pre">pattern_tail</span></tt></td>
+<td><tt class="docutils literal"><span class="pre">:=</span> <span class="pre">&quot;|&quot;</span> <span class="pre">pattern</span> <span class="pre">|</span> <span class="pre">&quot;,&quot;</span> <span class="pre">pattern</span> <span class="pre">pattern_tail</span> <span class="pre">|</span> <span class="pre">ε</span></tt></td>
+</tr>
+<tr><td>9</td>
+<td><tt class="docutils literal"><span class="pre">pattern_tuple</span></tt></td>
+<td><tt class="docutils literal"><span class="pre">:=</span> <span class="pre">&quot;{&quot;</span> <span class="pre">&quot;}&quot;</span> <span class="pre">|</span> <span class="pre">&quot;{&quot;</span> <span class="pre">patterns</span> <span class="pre">&quot;}&quot;</span></tt></td>
+</tr>
+<tr><td>10</td>
+<td><tt class="docutils literal"><span class="pre">patterns</span></tt></td>
+<td><tt class="docutils literal"><span class="pre">:=</span> <span class="pre">pattern</span> <span class="pre">|</span> <span class="pre">pattern</span> <span class="pre">&quot;,&quot;</span> <span class="pre">patterns</span></tt></td>
+</tr>
+<tr><td>11</td>
+<td><tt class="docutils literal"><span class="pre">expr</span></tt></td>
+<td><tt class="docutils literal"><span class="pre">:=</span> <span class="pre">basic_type</span> <span class="pre">|</span> <span class="pre">list</span> <span class="pre">|</span> <span class="pre">tuple</span> <span class="pre">|</span> <span class="pre">function_call</span> <span class="pre">|</span> <span class="pre">expr</span> <span class="pre">add</span> <span class="pre">op</span> <span class="pre">expr</span> <span class="pre">|</span> <span class="pre">expr</span> <span class="pre">mult_op</span> <span class="pre">expr</span> <span class="pre">|</span> <span class="pre">prefix_op</span> <span class="pre">expr</span> <span class="pre">|</span> <span class="pre">&quot;(&quot;</span> <span class="pre">expr</span> <span class="pre">&quot;)&quot;</span> <span class="pre">|</span> <span class="pre">&quot;begin&quot;</span> <span class="pre">exprs</span> <span class="pre">&quot;end&quot;</span> <span class="pre">|</span> <span class="pre">&quot;catch&quot;</span> <span class="pre">expr</span> <span class="pre">|</span> <span class="pre">case_expr</span> <span class="pre">|</span> <span class="pre">if_expr</span> <span class="pre">|</span> <span class="pre">receive_expr</span> <span class="pre">|</span> <span class="pre">match_expr</span> <span class="pre">|</span> <span class="pre">send</span> <span class="pre">expr</span></tt></td>
+</tr>
+<tr><td>12</td>
+<td><tt class="docutils literal"><span class="pre">list</span></tt></td>
+<td><tt class="docutils literal"><span class="pre">:=</span> <span class="pre">&quot;[&quot;</span> <span class="pre">&quot;]&quot;</span> <span class="pre">|</span> <span class="pre">&quot;[&quot;</span> <span class="pre">expr</span> <span class="pre">expr_tail</span> <span class="pre">&quot;]&quot;</span></tt></td>
+</tr>
+<tr><td>13</td>
+<td><tt class="docutils literal"><span class="pre">expr_tail</span></tt></td>
+<td><tt class="docutils literal"><span class="pre">:=</span> <span class="pre">&quot;|&quot;</span> <span class="pre">expr</span> <span class="pre">|</span> <span class="pre">&quot;,&quot;</span> <span class="pre">expr</span> <span class="pre">expr_tail</span> <span class="pre">|</span> <span class="pre">ε</span></tt></td>
+</tr>
+<tr><td>14</td>
+<td><tt class="docutils literal"><span class="pre">tuple</span></tt></td>
+<td><tt class="docutils literal"><span class="pre">:=</span> <span class="pre">&quot;{&quot;</span> <span class="pre">&quot;}&quot;</span> <span class="pre">|</span> <span class="pre">&quot;{&quot;</span> <span class="pre">exprs</span> <span class="pre">&quot;}&quot;</span></tt></td>
+</tr>
+<tr><td>15</td>
+<td><tt class="docutils literal"><span class="pre">function_call</span></tt></td>
+<td><tt class="docutils literal"><span class="pre">:=</span> <span class="pre">&quot;atom&quot;</span> <span class="pre">&quot;(&quot;</span> <span class="pre">parameter_list</span> <span class="pre">&quot;)&quot;</span> <span class="pre">|</span> <span class="pre">&quot;atom&quot;</span> <span class="pre">&quot;:&quot;</span> <span class="pre">&quot;atom&quot;</span> <span class="pre">&quot;(&quot;</span> <span class="pre">parameter_list</span> <span class="pre">&quot;)&quot;</span></tt></td>
+</tr>
+<tr><td>16</td>
+<td><tt class="docutils literal"><span class="pre">parameter_list</span></tt></td>
+<td><tt class="docutils literal"><span class="pre">:=</span> <span class="pre">exprs</span> <span class="pre">|</span> <span class="pre">ε</span></tt></td>
+</tr>
+<tr><td>17</td>
+<td><tt class="docutils literal"><span class="pre">case_expr</span></tt></td>
+<td><tt class="docutils literal"><span class="pre">:=</span> <span class="pre">&quot;case&quot;</span> <span class="pre">expr</span> <span class="pre">&quot;of&quot;</span> <span class="pre">cr_clauses</span> <span class="pre">&quot;end&quot;</span></tt></td>
+</tr>
+<tr><td>18</td>
+<td><tt class="docutils literal"><span class="pre">cr_clause</span></tt></td>
+<td><tt class="docutils literal"><span class="pre">:=</span> <span class="pre">pattern</span> <span class="pre">clause_guard</span> <span class="pre">clause_body</span></tt></td>
+</tr>
+<tr><td>19</td>
+<td><tt class="docutils literal"><span class="pre">cr_clauses</span></tt></td>
+<td><tt class="docutils literal"><span class="pre">:=</span> <span class="pre">cr_clause</span> <span class="pre">|</span> <span class="pre">cr_clause</span> <span class="pre">&quot;;&quot;</span> <span class="pre">cr_clauses</span></tt></td>
+</tr>
+<tr><td>20</td>
+<td><tt class="docutils literal"><span class="pre">if_expr</span></tt></td>
+<td><tt class="docutils literal"><span class="pre">:=</span> <span class="pre">&quot;if&quot;</span> <span class="pre">if_clauses</span> <span class="pre">&quot;end&quot;</span></tt></td>
+</tr>
+<tr><td>21</td>
+<td><tt class="docutils literal"><span class="pre">if_clause</span></tt></td>
+<td><tt class="docutils literal"><span class="pre">:=</span> <span class="pre">guard</span> <span class="pre">clause_body</span></tt></td>
+</tr>
+<tr><td>22</td>
+<td><tt class="docutils literal"><span class="pre">if_clauses</span></tt></td>
+<td><tt class="docutils literal"><span class="pre">:=</span> <span class="pre">if_clause</span> <span class="pre">|</span> <span class="pre">if_clause</span> <span class="pre">&quot;;&quot;</span> <span class="pre">if_clauses</span></tt></td>
+</tr>
+<tr><td>23</td>
+<td><tt class="docutils literal"><span class="pre">receive_expr</span></tt></td>
+<td><tt class="docutils literal"><span class="pre">:=</span> <span class="pre">&quot;receive&quot;</span> <span class="pre">&quot;after&quot;</span> <span class="pre">expr</span> <span class="pre">clause_body</span> <span class="pre">&quot;end&quot;</span> <span class="pre">|</span> <span class="pre">&quot;receive&quot;</span> <span class="pre">cr_clauses</span> <span class="pre">&quot;end&quot;</span> <span class="pre">|</span> <span class="pre">&quot;receive&quot;</span> <span class="pre">cr_clauses</span> <span class="pre">&quot;after&quot;</span> <span class="pre">expr</span> <span class="pre">clause_body</span> <span class="pre">&quot;end&quot;</span></tt></td>
+</tr>
+<tr><td>24</td>
+<td><tt class="docutils literal"><span class="pre">match_expr</span></tt></td>
+<td><tt class="docutils literal"><span class="pre">:=</span> <span class="pre">expr</span> <span class="pre">&quot;=&quot;</span> <span class="pre">expr</span></tt></td>
+</tr>
+<tr><td>25</td>
+<td><tt class="docutils literal"><span class="pre">send</span> <span class="pre">expr</span></tt></td>
+<td><tt class="docutils literal"><span class="pre">:=</span> <span class="pre">expr</span> <span class="pre">&quot;!&quot;</span> <span class="pre">expr</span></tt></td>
+</tr>
+<tr><td>26</td>
+<td><tt class="docutils literal"><span class="pre">exprs</span></tt></td>
+<td><tt class="docutils literal"><span class="pre">:=</span> <span class="pre">expr</span> <span class="pre">|</span> <span class="pre">expr</span> <span class="pre">&quot;,&quot;</span> <span class="pre">exprs</span></tt></td>
+</tr>
+<tr><td>27</td>
+<td><tt class="docutils literal"><span class="pre">guard_expr</span></tt></td>
+<td><tt class="docutils literal"><span class="pre">:=</span> <span class="pre">basic_type</span> <span class="pre">|</span> <span class="pre">guard_expr_list</span> <span class="pre">|</span> <span class="pre">guard_expr_tuple</span> <span class="pre">|</span> <span class="pre">guard_call</span> <span class="pre">|</span> <span class="pre">&quot;(&quot;</span> <span class="pre">guard_expr</span> <span class="pre">&quot;)&quot;</span> <span class="pre">|</span> <span class="pre">guard_expr</span> <span class="pre">add</span> <span class="pre">op</span> <span class="pre">guard_expr</span> <span class="pre">|</span> <span class="pre">guard_expr</span> <span class="pre">mult_op</span> <span class="pre">guard_expr</span> <span class="pre">|</span> <span class="pre">prefix_op</span> <span class="pre">guard_expr</span></tt></td>
+</tr>
+<tr><td>28</td>
+<td><tt class="docutils literal"><span class="pre">guard_expr_list</span></tt></td>
+<td><tt class="docutils literal"><span class="pre">:=</span> <span class="pre">&quot;[&quot;</span> <span class="pre">&quot;]&quot;</span> <span class="pre">|</span> <span class="pre">&quot;[&quot;</span> <span class="pre">guard_expr</span> <span class="pre">guard_expr_tail</span> <span class="pre">&quot;]&quot;</span></tt></td>
+</tr>
+<tr><td>29</td>
+<td><tt class="docutils literal"><span class="pre">guard_expr_tail</span></tt></td>
+<td><tt class="docutils literal"><span class="pre">:=</span> <span class="pre">&quot;|&quot;</span> <span class="pre">guard_expr</span> <span class="pre">|</span> <span class="pre">&quot;,&quot;</span> <span class="pre">guard_expr</span> <span class="pre">guard_expr_tail</span> <span class="pre">|</span> <span class="pre">ε</span></tt></td>
+</tr>
+<tr><td>30</td>
+<td><tt class="docutils literal"><span class="pre">guard_expr_tuple</span></tt></td>
+<td><tt class="docutils literal"><span class="pre">:=</span> <span class="pre">&quot;{&quot;</span> <span class="pre">&quot;}&quot;</span> <span class="pre">|</span> <span class="pre">&quot;{&quot;</span> <span class="pre">guard_exprs</span> <span class="pre">&quot;}&quot;</span></tt></td>
+</tr>
+<tr><td>31</td>
+<td><tt class="docutils literal"><span class="pre">guard_exprs</span></tt></td>
+<td><tt class="docutils literal"><span class="pre">:=</span> <span class="pre">guard_expr</span> <span class="pre">|</span> <span class="pre">guard_expr</span> <span class="pre">&quot;,&quot;</span> <span class="pre">guard_exprs</span></tt></td>
+</tr>
+<tr><td>32</td>
+<td><tt class="docutils literal"><span class="pre">guard_call</span></tt></td>
+<td><tt class="docutils literal"><span class="pre">:=</span> <span class="pre">&quot;atom&quot;</span> <span class="pre">&quot;(&quot;</span> <span class="pre">guard_parameter_list</span> <span class="pre">&quot;)&quot;</span></tt></td>
+</tr>
+<tr><td>33</td>
+<td><tt class="docutils literal"><span class="pre">guard_parameter_list</span></tt></td>
+<td><tt class="docutils literal"><span class="pre">:=</span> <span class="pre">guard_exprs</span> <span class="pre">|</span> <span class="pre">ε</span></tt></td>
+</tr>
+<tr><td>34</td>
+<td><tt class="docutils literal"><span class="pre">bif_test</span></tt></td>
+<td><tt class="docutils literal"><span class="pre">:=</span> <span class="pre">&quot;atom&quot;</span> <span class="pre">&quot;(&quot;</span> <span class="pre">guard_parameter_list</span> <span class="pre">&quot;)&quot;</span></tt></td>
+</tr>
+<tr><td>35</td>
+<td><tt class="docutils literal"><span class="pre">guard_test</span></tt></td>
+<td><tt class="docutils literal"><span class="pre">:=</span> <span class="pre">bif_test</span> <span class="pre">|</span> <span class="pre">guard_expr</span> <span class="pre">comp_op</span> <span class="pre">guard_expr</span></tt></td>
+</tr>
+<tr><td>36</td>
+<td><tt class="docutils literal"><span class="pre">guard_tests</span></tt></td>
+<td><tt class="docutils literal"><span class="pre">:=</span> <span class="pre">guard_test</span> <span class="pre">|</span> <span class="pre">guard_test</span> <span class="pre">&quot;,&quot;</span> <span class="pre">guard_tests</span></tt></td>
+</tr>
+<tr><td>37</td>
+<td><tt class="docutils literal"><span class="pre">guard</span></tt></td>
+<td><tt class="docutils literal"><span class="pre">:=</span> <span class="pre">&quot;true&quot;</span> <span class="pre">|</span> <span class="pre">guard_tests</span></tt></td>
+</tr>
+<tr><td>38</td>
+<td><tt class="docutils literal"><span class="pre">function_clause</span></tt></td>
+<td><tt class="docutils literal"><span class="pre">:=</span> <span class="pre">clause_head</span> <span class="pre">clause_guard</span> <span class="pre">clause_body</span></tt></td>
+</tr>
+<tr><td>39</td>
+<td><tt class="docutils literal"><span class="pre">clause_head</span></tt></td>
+<td><tt class="docutils literal"><span class="pre">:=</span> <span class="pre">&quot;atom&quot;</span> <span class="pre">&quot;(&quot;</span> <span class="pre">formal</span> <span class="pre">parameter_list</span> <span class="pre">&quot;)&quot;</span></tt></td>
+</tr>
+<tr><td>40</td>
+<td><tt class="docutils literal"><span class="pre">formal</span> <span class="pre">parameter_list</span></tt></td>
+<td><tt class="docutils literal"><span class="pre">:=</span> <span class="pre">patterns</span> <span class="pre">|</span> <span class="pre">ε</span></tt></td>
+</tr>
+<tr><td>41</td>
+<td><tt class="docutils literal"><span class="pre">clause_guard</span></tt></td>
+<td><tt class="docutils literal"><span class="pre">:=</span> <span class="pre">&quot;when&quot;</span> <span class="pre">guard</span> <span class="pre">|</span> <span class="pre">ε</span></tt></td>
+</tr>
+<tr><td>42</td>
+<td><tt class="docutils literal"><span class="pre">clause_body</span></tt></td>
+<td><tt class="docutils literal"><span class="pre">:=</span> <span class="pre">&quot;-&gt;&quot;</span> <span class="pre">exprs</span></tt></td>
+</tr>
+<tr><td>43</td>
+<td><tt class="docutils literal"><span class="pre">function</span></tt></td>
+<td><tt class="docutils literal"><span class="pre">:=</span> <span class="pre">function_clause</span> <span class="pre">|</span> <span class="pre">function_clause</span> <span class="pre">&quot;;&quot;</span> <span class="pre">function</span></tt></td>
+</tr>
+<tr><td>44</td>
+<td><tt class="docutils literal"><span class="pre">attribute</span></tt></td>
+<td><tt class="docutils literal"><span class="pre">:=</span> <span class="pre">pattern</span> <span class="pre">|</span> <span class="pre">&quot;[&quot;</span> <span class="pre">farity_list</span> <span class="pre">&quot;]&quot;</span> <span class="pre">|</span> <span class="pre">&quot;atom&quot;</span> <span class="pre">&quot;,&quot;</span> <span class="pre">&quot;[&quot;</span> <span class="pre">farity_list</span> <span class="pre">&quot;]&quot;</span></tt></td>
+</tr>
+<tr><td>45</td>
+<td><tt class="docutils literal"><span class="pre">farity_list</span></tt></td>
+<td><tt class="docutils literal"><span class="pre">:=</span> <span class="pre">farity</span> <span class="pre">|</span> <span class="pre">farity</span> <span class="pre">&quot;,&quot;</span> <span class="pre">farity_list</span></tt></td>
+</tr>
+<tr><td>46</td>
+<td><tt class="docutils literal"><span class="pre">farity</span></tt></td>
+<td><tt class="docutils literal"><span class="pre">:=</span> <span class="pre">&quot;atom&quot;</span> <span class="pre">&quot;/&quot;</span> <span class="pre">&quot;number&quot;</span></tt></td>
+</tr>
+<tr><td>47</td>
+<td><tt class="docutils literal"><span class="pre">form</span></tt></td>
+<td><tt class="docutils literal"><span class="pre">:=</span> <span class="pre">&quot;-&quot;</span> <span class="pre">&quot;atom&quot;</span> <span class="pre">&quot;(&quot;</span> <span class="pre">attribute</span> <span class="pre">&quot;)&quot;</span> <span class="pre">|</span> <span class="pre">function</span></tt></td>
+</tr>
+</tbody>
+</table>
+<hr class="docutils" />
+<table border="1" class="docutils">
+<colgroup>
+<col width="50%" />
+<col width="50%" />
+</colgroup>
+<thead valign="bottom">
+<tr><th class="head">非终结符</th>
+<th class="head">编号</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr><td><tt class="docutils literal"><span class="pre">add_op</span></tt></td>
+<td>*1 11 27</td>
+</tr>
+<tr><td><tt class="docutils literal"><span class="pre">attribute</span></tt></td>
+<td>*44 47</td>
+</tr>
+<tr><td><tt class="docutils literal"><span class="pre">basic_type</span></tt></td>
+<td>*5 6 11 27</td>
+</tr>
+<tr><td><tt class="docutils literal"><span class="pre">bif_test</span></tt></td>
+<td>*34 35</td>
+</tr>
+<tr><td><tt class="docutils literal"><span class="pre">case_expr</span></tt></td>
+<td>11 *17</td>
+</tr>
+<tr><td><tt class="docutils literal"><span class="pre">clause_body</span></tt></td>
+<td>18 21 23 38 *42</td>
+</tr>
+<tr><td><tt class="docutils literal"><span class="pre">clause_guard</span></tt></td>
+<td>18 38 *41</td>
+</tr>
+<tr><td><tt class="docutils literal"><span class="pre">clause_head</span></tt></td>
+<td>38 *39</td>
+</tr>
+<tr><td><tt class="docutils literal"><span class="pre">comp_op</span></tt></td>
+<td>*2 35</td>
+</tr>
+<tr><td><tt class="docutils literal"><span class="pre">cr_clause</span></tt></td>
+<td>*18 19</td>
+</tr>
+<tr><td><tt class="docutils literal"><span class="pre">cr_clauses</span></tt></td>
+<td>17 *19 19 23</td>
+</tr>
+<tr><td><tt class="docutils literal"><span class="pre">expr</span></tt></td>
+<td>*11 11 12 13 17 23 24 25 26</td>
+</tr>
+<tr><td><tt class="docutils literal"><span class="pre">expr_tail</span></tt></td>
+<td>12 *13 13</td>
+</tr>
+<tr><td><tt class="docutils literal"><span class="pre">exprs</span></tt></td>
+<td>11 14 16 *26 26 42</td>
+</tr>
+<tr><td><tt class="docutils literal"><span class="pre">farity</span></tt></td>
+<td>45 *46</td>
+</tr>
+<tr><td><tt class="docutils literal"><span class="pre">farity_list</span></tt></td>
+<td>44 *45 45</td>
+</tr>
+<tr><td><tt class="docutils literal"><span class="pre">form</span></tt></td>
+<td>*47</td>
+</tr>
+<tr><td><tt class="docutils literal"><span class="pre">formal_parameter_list</span></tt></td>
+<td>39 *40</td>
+</tr>
+<tr><td><tt class="docutils literal"><span class="pre">function</span></tt></td>
+<td>*43 43 47</td>
+</tr>
+<tr><td><tt class="docutils literal"><span class="pre">function_call</span></tt></td>
+<td>11 *15</td>
+</tr>
+<tr><td><tt class="docutils literal"><span class="pre">function_clause</span></tt></td>
+<td>*38 43</td>
+</tr>
+<tr><td><tt class="docutils literal"><span class="pre">guard</span></tt></td>
+<td>21 *37 41</td>
+</tr>
+<tr><td><tt class="docutils literal"><span class="pre">guard_call</span></tt></td>
+<td>27 *32</td>
+</tr>
+<tr><td><tt class="docutils literal"><span class="pre">guard_expr</span></tt></td>
+<td>*27 27 28 29 31 35</td>
+</tr>
+<tr><td><tt class="docutils literal"><span class="pre">guard_expr_list</span></tt></td>
+<td>27 *28</td>
+</tr>
+<tr><td><tt class="docutils literal"><span class="pre">guard_expr_tail</span></tt></td>
+<td>28 *29 29</td>
+</tr>
+<tr><td><tt class="docutils literal"><span class="pre">guard_expr_tuple</span></tt></td>
+<td>27 *30</td>
+</tr>
+<tr><td><tt class="docutils literal"><span class="pre">guard_exprs</span></tt></td>
+<td>30 *31 31 33</td>
+</tr>
+<tr><td><tt class="docutils literal"><span class="pre">guard_parameter_list</span></tt></td>
+<td>32 *33 34</td>
+</tr>
+<tr><td><tt class="docutils literal"><span class="pre">guard_test</span></tt></td>
+<td>*35 36</td>
+</tr>
+<tr><td><tt class="docutils literal"><span class="pre">guard_tests</span></tt></td>
+<td>*36 36 37</td>
+</tr>
+<tr><td><tt class="docutils literal"><span class="pre">if_clause</span></tt></td>
+<td>*21 22</td>
+</tr>
+<tr><td><tt class="docutils literal"><span class="pre">if_clauses</span></tt></td>
+<td>20 *22 22</td>
+</tr>
+<tr><td><tt class="docutils literal"><span class="pre">if_expr</span></tt></td>
+<td>11 *20</td>
+</tr>
+<tr><td><tt class="docutils literal"><span class="pre">list</span></tt></td>
+<td>11 *12</td>
+</tr>
+<tr><td><tt class="docutils literal"><span class="pre">match_expr</span></tt></td>
+<td>11 *24</td>
+</tr>
+<tr><td><tt class="docutils literal"><span class="pre">mult_op</span></tt></td>
+<td>*3 11 27</td>
+</tr>
+<tr><td><tt class="docutils literal"><span class="pre">parameter_list</span></tt></td>
+<td>15 *16</td>
+</tr>
+<tr><td><tt class="docutils literal"><span class="pre">pattern</span></tt></td>
+<td>*6 7 8 10 18 44</td>
+</tr>
+<tr><td><tt class="docutils literal"><span class="pre">pattern_list</span></tt></td>
+<td>6 *7</td>
+</tr>
+<tr><td><tt class="docutils literal"><span class="pre">pattern_tail</span></tt></td>
+<td>7 *8 8</td>
+</tr>
+<tr><td><tt class="docutils literal"><span class="pre">pattern_tuple</span></tt></td>
+<td>6 *9</td>
+</tr>
+<tr><td><tt class="docutils literal"><span class="pre">patterns</span></tt></td>
+<td>9 *10 10 40</td>
+</tr>
+<tr><td><tt class="docutils literal"><span class="pre">prefix_op</span></tt></td>
+<td>*4 11 27</td>
+</tr>
+<tr><td><tt class="docutils literal"><span class="pre">receive_expr</span></tt></td>
+<td>11 *23</td>
+</tr>
+<tr><td><tt class="docutils literal"><span class="pre">send_expr</span></tt></td>
+<td>11 *25</td>
+</tr>
+<tr><td><tt class="docutils literal"><span class="pre">tuple</span></tt></td>
+<td>11 *14</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>上一个主题</h4>
+  <p class="topless"><a href="part-i_chapter-9.html"
+                        title="上一章">第9章 杂项</a></p>
+  <h4>下一个主题</h4>
+  <p class="topless"><a href="part-i_appendix-b.html"
+                        title="下一章">附录B 内置函数</a></p>
+<div id="searchbox" style="display: none">
+  <h3>快速搜索</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="搜索" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    输入相关的模块，术语，类或者函数名称进行搜索
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>导航</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="part-i_appendix-b.html" title="附录B 内置函数"
+             >下一页</a></li>
+        <li class="right" >
+          <a href="part-i_chapter-9.html" title="第9章 杂项"
+             >上一页</a> |</li>
+        <li><a href="index.html">Erlang并发编程</a> &raquo;</li>
+          <li><a href="part-i_index.html" >第 I 部分 编程</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; 版权所有 2009, CPiE-CN志愿译者团队.
+      使用 <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+    </div>
+  </body>
+</html>

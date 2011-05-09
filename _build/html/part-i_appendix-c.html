@@ -1,0 +1,301 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>附录C 标准库 &mdash; Erlang并发编程</title>
+    <link rel="stylesheet" href="_static/nature-ext.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '1.0.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/translations.js"></script>
+    <link rel="top" title="Erlang并发编程" href="index.html" />
+    <link rel="up" title="第 I 部分 编程" href="part-i_index.html" />
+    <link rel="next" title="附录D Erlang的错误处理" href="part-i_appendix-d.html" />
+    <link rel="prev" title="附录B 内置函数" href="part-i_appendix-b.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>导航</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="part-i_appendix-d.html" title="附录D Erlang的错误处理"
+             accesskey="N">下一页</a></li>
+        <li class="right" >
+          <a href="part-i_appendix-b.html" title="附录B 内置函数"
+             accesskey="P">上一页</a> |</li>
+        <li><a href="index.html">Erlang并发编程</a> &raquo;</li>
+          <li><a href="part-i_index.html" accesskey="U">第 I 部分 编程</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="c">
+<h1>附录C 标准库<a class="headerlink" href="#c" title="永久链接至标题">¶</a></h1>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">翻译:</th><td class="field-body">赵卫国</td>
+</tr>
+</tbody>
+</table>
+<p>附录C 描述了 Erlang 标准库模块的一些函数。</p>
+<div class="section" id="io">
+<h2>io<a class="headerlink" href="#io" title="永久链接至标题">¶</a></h2>
+<p>Io 模块提供了基本的输入输出。这儿的所有函数都有可选参数 <tt class="docutils literal"><span class="pre">Dev</span></tt> ，它是一个用于输入输出的文件描述符。默认值是标准输入输出。</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="30%" />
+<col width="70%" />
+</colgroup>
+<tbody valign="top">
+<tr><td><tt class="docutils literal"><span class="pre">format([Dev],F,Args)</span></tt></td>
+<td>按格式 <tt class="docutils literal"><span class="pre">F</span></tt> 输出参数 <tt class="docutils literal"><span class="pre">Args</span></tt> 。</td>
+</tr>
+<tr><td><tt class="docutils literal"><span class="pre">get_chars([Dev],P,N)</span></tt></td>
+<td>输出提示 <tt class="docutils literal"><span class="pre">P</span></tt> 并读出 <tt class="docutils literal"><span class="pre">Dev</span></tt> 的前 <tt class="docutils literal"><span class="pre">N</span></tt> 个字符。</td>
+</tr>
+<tr><td><tt class="docutils literal"><span class="pre">get_line([Dev],</span> <span class="pre">P)</span></tt></td>
+<td>输出提示 <tt class="docutils literal"><span class="pre">P</span></tt> 并读出 <tt class="docutils literal"><span class="pre">Dev</span></tt> 的一行。</td>
+</tr>
+<tr><td><tt class="docutils literal"><span class="pre">n1([Dev])</span></tt></td>
+<td>输出新的一行。</td>
+</tr>
+<tr><td><tt class="docutils literal"><span class="pre">parse_exprs([Dev],</span> <span class="pre">P)</span></tt></td>
+<td>输出提示 <tt class="docutils literal"><span class="pre">P</span></tt> 并从 <tt class="docutils literal"><span class="pre">Dev</span></tt> 中读出 Erlang 表达。如果成功返回 <tt class="docutils literal"><span class="pre">{form,</span> <span class="pre">ExprList}</span></tt> , 否则返回 <tt class="docutils literal"><span class="pre">{error,</span> <span class="pre">What}</span></tt> 。</td>
+</tr>
+<tr><td><tt class="docutils literal"><span class="pre">parse_form([Dev],</span> <span class="pre">P)</span></tt></td>
+<td>输出提示 <tt class="docutils literal"><span class="pre">P</span></tt> ，并把 <tt class="docutils literal"><span class="pre">Dev</span></tt> 读成一个 <tt class="docutils literal"><span class="pre">Erlang</span></tt> 表。如果成功返回 <tt class="docutils literal"><span class="pre">{form,</span> <span class="pre">Form}</span></tt> ，否则返回 <tt class="docutils literal"><span class="pre">{error,</span> <span class="pre">What}</span></tt> 。</td>
+</tr>
+<tr><td><tt class="docutils literal"><span class="pre">put_chars([Dev],</span> <span class="pre">L)</span></tt></td>
+<td>输出列表 <tt class="docutils literal"><span class="pre">L</span></tt> 中的字符。</td>
+</tr>
+<tr><td><tt class="docutils literal"><span class="pre">read([Dev],</span> <span class="pre">P)</span></tt></td>
+<td>输出提示 <tt class="docutils literal"><span class="pre">P</span></tt> 并且从 <tt class="docutils literal"><span class="pre">Dev</span></tt> 中读一项式。如果成功则返回 <tt class="docutils literal"><span class="pre">{term,T}</span></tt> 否则返回 <tt class="docutils literal"><span class="pre">{error,What}</span></tt> 。</td>
+</tr>
+<tr><td><tt class="docutils literal"><span class="pre">write([Dev],Term)</span></tt></td>
+<td>输出 <tt class="docutils literal"><span class="pre">Term</span></tt> 。</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="file">
+<h2>file<a class="headerlink" href="#file" title="永久链接至标题">¶</a></h2>
+<p><tt class="docutils literal"><span class="pre">file</span></tt> 模块提供了与文件系统的标准接口。</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="30%" />
+<col width="70%" />
+</colgroup>
+<tbody valign="top">
+<tr><td><tt class="docutils literal"><span class="pre">read</span> <span class="pre">file(File)</span></tt>&#8220;</td>
+<td>返回 <tt class="docutils literal"><span class="pre">{ok,Bin}</span></tt> ，其中 <tt class="docutils literal"><span class="pre">Bin</span></tt> 是一个包含文件 <tt class="docutils literal"><span class="pre">File</span></tt> 内容的二进制数据对象。</td>
+</tr>
+<tr><td><tt class="docutils literal"><span class="pre">write</span> <span class="pre">file(File,</span> <span class="pre">Binary)</span></tt></td>
+<td>把二进制数据对象 <tt class="docutils literal"><span class="pre">Binary</span></tt> 中的内容写入到文件 <tt class="docutils literal"><span class="pre">File</span></tt> 中。</td>
+</tr>
+<tr><td><tt class="docutils literal"><span class="pre">get_cwd()</span></tt></td>
+<td>返回 <tt class="docutils literal"><span class="pre">{ok,Dir}</span></tt> ，其中 <tt class="docutils literal"><span class="pre">Dir</span></tt> 是当前工作目录。</td>
+</tr>
+<tr><td><tt class="docutils literal"><span class="pre">set</span> <span class="pre">cwd(Dir)</span></tt></td>
+<td>把当前工作目录设为 <tt class="docutils literal"><span class="pre">Dir</span></tt> 。</td>
+</tr>
+<tr><td><tt class="docutils literal"><span class="pre">rename(From,</span> <span class="pre">To)</span></tt></td>
+<td>把文件名 <tt class="docutils literal"><span class="pre">From</span></tt> 改为 <tt class="docutils literal"><span class="pre">To</span></tt> 。</td>
+</tr>
+<tr><td><tt class="docutils literal"><span class="pre">make</span> <span class="pre">dir(Dir)</span></tt></td>
+<td>创建目录 <tt class="docutils literal"><span class="pre">Dir</span></tt> 。</td>
+</tr>
+<tr><td><tt class="docutils literal"><span class="pre">del</span> <span class="pre">dir(Dir)</span></tt></td>
+<td>删除目录 <tt class="docutils literal"><span class="pre">Dir</span></tt> 。</td>
+</tr>
+<tr><td><tt class="docutils literal"><span class="pre">list</span> <span class="pre">dir(Dir)</span></tt></td>
+<td>返回 <tt class="docutils literal"><span class="pre">{ok,L}</span></tt> ，其中 <tt class="docutils literal"><span class="pre">L</span></tt> 是目录 <tt class="docutils literal"><span class="pre">Dir</span></tt> 中的所有文件列表。</td>
+</tr>
+<tr><td><tt class="docutils literal"><span class="pre">file</span> <span class="pre">info(File)</span></tt></td>
+<td>返回 <tt class="docutils literal"><span class="pre">{ok,L}</span></tt> ，其中 <tt class="docutils literal"><span class="pre">L</span></tt> 是包含文件 <tt class="docutils literal"><span class="pre">File</span></tt> 信息的元组。</td>
+</tr>
+<tr><td><tt class="docutils literal"><span class="pre">consult(File)</span></tt></td>
+<td>如果正确返回 <tt class="docutils literal"><span class="pre">{ok,L}</span></tt> ，这里的 <tt class="docutils literal"><span class="pre">L</span></tt> 是文件 <tt class="docutils literal"><span class="pre">File</span></tt> 。</td>
+</tr>
+<tr><td><tt class="docutils literal"><span class="pre">open(File,</span> <span class="pre">Mode)</span></tt></td>
+<td>打开文件 <tt class="docutils literal"><span class="pre">File</span></tt> 的模式 <tt class="docutils literal"><span class="pre">Mode</span></tt> 有三种，分别是 <tt class="docutils literal"><span class="pre">read</span></tt> 、 <tt class="docutils literal"><span class="pre">write</span></tt> 和 <tt class="docutils literal"><span class="pre">read_write</span></tt> 。如果成功打开返回 <tt class="docutils literal"><span class="pre">{ok,File}</span></tt> ， 失败则返回 <tt class="docutils literal"><span class="pre">{error,What}</span></tt> 。</td>
+</tr>
+<tr><td><tt class="docutils literal"><span class="pre">close(Desc)</span></tt></td>
+<td>关闭文件 <tt class="docutils literal"><span class="pre">Desc</span></tt> 。</td>
+</tr>
+<tr><td><tt class="docutils literal"><span class="pre">position(Desc,</span> <span class="pre">N)</span></tt></td>
+<td>把文件 <tt class="docutils literal"><span class="pre">Desc</span></tt> 的当前位置设为 <tt class="docutils literal"><span class="pre">N</span></tt> 。</td>
+</tr>
+<tr><td><tt class="docutils literal"><span class="pre">truncate(Desc)</span></tt></td>
+<td>把文件 <tt class="docutils literal"><span class="pre">Desc</span></tt> 在当前位置截断。</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="lists">
+<h2>lists<a class="headerlink" href="#lists" title="永久链接至标题">¶</a></h2>
+<p><tt class="docutils literal"><span class="pre">list</span></tt> 模块提供了标准列表进程函数.下面的参数中以 <tt class="docutils literal"><span class="pre">L</span></tt> 开头的都代表是列表。</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="38%" />
+<col width="63%" />
+</colgroup>
+<tbody valign="top">
+<tr><td><tt class="docutils literal"><span class="pre">append(L1,</span> <span class="pre">L2)</span></tt></td>
+<td>返回 <tt class="docutils literal"><span class="pre">L1+L2</span></tt> 。</td>
+</tr>
+<tr><td><tt class="docutils literal"><span class="pre">append(L)</span></tt></td>
+<td>把 <tt class="docutils literal"><span class="pre">L</span></tt> 中所有子列表附加起来的。</td>
+</tr>
+<tr><td><tt class="docutils literal"><span class="pre">concat(L)</span></tt></td>
+<td>把列表 <tt class="docutils literal"><span class="pre">L</span></tt> 中的所有原子式合并形成一个新的原子。</td>
+</tr>
+<tr><td><tt class="docutils literal"><span class="pre">delete(X,</span> <span class="pre">L)</span></tt></td>
+<td>返回把 <tt class="docutils literal"><span class="pre">L</span></tt> 中第一个出现的 <tt class="docutils literal"><span class="pre">X</span></tt> 删除后的列表。</td>
+</tr>
+<tr><td><tt class="docutils literal"><span class="pre">flat_length(L)</span></tt></td>
+<td>和 <tt class="docutils literal"><span class="pre">length(flatten(L))</span></tt> 等价。</td>
+</tr>
+<tr><td><tt class="docutils literal"><span class="pre">flatten(L)</span></tt></td>
+<td>返回对L进行扁平化处理后的列表。</td>
+</tr>
+<tr><td><tt class="docutils literal"><span class="pre">keydelete(Key,</span> <span class="pre">N,</span> <span class="pre">LTup)</span></tt></td>
+<td>返回列表 <tt class="docutils literal"><span class="pre">LTup</span></tt> 删除它的第一个元组中第 <tt class="docutils literal"><span class="pre">N</span></tt> 个元素是 <tt class="docutils literal"><span class="pre">Key</span></tt> 的元组后的列表。</td>
+</tr>
+<tr><td><tt class="docutils literal"><span class="pre">keysearch(Key,</span> <span class="pre">N,</span> <span class="pre">LTup)</span></tt></td>
+<td>遍历元组列表 <tt class="docutils literal"><span class="pre">LTup</span></tt> ,查找一个第 <tt class="docutils literal"><span class="pre">N</span></tt> 个元素是 <tt class="docutils literal"><span class="pre">Key</span></tt> 的元组,若找到返回 <tt class="docutils literal"><span class="pre">{value,</span> <span class="pre">X}</span></tt> ;否则返回 <tt class="docutils literal"><span class="pre">false</span></tt> 。</td>
+</tr>
+<tr><td><tt class="docutils literal"><span class="pre">keysort(N,</span> <span class="pre">LTup)</span></tt></td>
+<td>返回有 <tt class="docutils literal"><span class="pre">LTup</span></tt> 中一系列元组的分类的版本,这其中的第 <tt class="docutils literal"><span class="pre">N</span></tt> 个元素用来作关键字。</td>
+</tr>
+<tr><td><tt class="docutils literal"><span class="pre">member(X,</span> <span class="pre">L)</span></tt></td>
+<td>若 <tt class="docutils literal"><span class="pre">X</span></tt> 是列表 <tt class="docutils literal"><span class="pre">L</span></tt> 中的成员返回 <tt class="docutils literal"><span class="pre">true</span></tt>, 否则返回 <tt class="docutils literal"><span class="pre">false</span></tt> 。</td>
+</tr>
+<tr><td><tt class="docutils literal"><span class="pre">last(L)</span></tt></td>
+<td>返回 <tt class="docutils literal"><span class="pre">L</span></tt> 的最后一个元素。</td>
+</tr>
+<tr><td><tt class="docutils literal"><span class="pre">nth(N,</span> <span class="pre">L)</span></tt></td>
+<td>返回 <tt class="docutils literal"><span class="pre">L</span></tt> 的第 <tt class="docutils literal"><span class="pre">N</span></tt> 个元素。</td>
+</tr>
+<tr><td><tt class="docutils literal"><span class="pre">reverse(L)</span></tt></td>
+<td>把 <tt class="docutils literal"><span class="pre">L</span></tt> 中最上层的元素反转。</td>
+</tr>
+<tr><td><tt class="docutils literal"><span class="pre">reverse(L1,</span> <span class="pre">L2)</span></tt></td>
+<td>和 <tt class="docutils literal"><span class="pre">append(reverse(L1),</span> <span class="pre">L2)</span></tt> 等价。</td>
+</tr>
+<tr><td><tt class="docutils literal"><span class="pre">sort(L)</span></tt></td>
+<td>对 <tt class="docutils literal"><span class="pre">L</span></tt> 进行排序。</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="code">
+<h2>code<a class="headerlink" href="#code" title="永久链接至标题">¶</a></h2>
+<p><tt class="docutils literal"><span class="pre">code</span></tt> 模块用于载入或操纵编译过的代码。</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="30%" />
+<col width="70%" />
+</colgroup>
+<tbody valign="top">
+<tr><td><tt class="docutils literal"><span class="pre">set_path(D)</span></tt></td>
+<td>把代码服务器查询的路径设为目录 <tt class="docutils literal"><span class="pre">D</span></tt> 。</td>
+</tr>
+<tr><td><tt class="docutils literal"><span class="pre">load_file(File)</span></tt></td>
+<td>在当前路径上加载文件 <tt class="docutils literal"><span class="pre">File.erl</span></tt> 。加载成功返回 <tt class="docutils literal"><span class="pre">{module,</span> <span class="pre">ModuleName</span> <span class="pre">}</span></tt> ；失败返回: <tt class="docutils literal"><span class="pre">{error,</span> <span class="pre">What}</span></tt> 。</td>
+</tr>
+<tr><td><tt class="docutils literal"><span class="pre">is_loaded(Module)</span></tt></td>
+<td>检验模块 <tt class="docutils literal"><span class="pre">Module</span></tt> 是否已经加载.若已加载返回 <tt class="docutils literal"><span class="pre">{file,</span> <span class="pre">AbsFileName}</span></tt> ，否则返回 <tt class="docutils literal"><span class="pre">false</span></tt> 。</td>
+</tr>
+<tr><td><tt class="docutils literal"><span class="pre">esure_loaded(Module)</span></tt></td>
+<td>加载之前未加载的模块,它的返回值和 <tt class="docutils literal"><span class="pre">load_file(File)</span></tt> 一样。</td>
+</tr>
+<tr><td><tt class="docutils literal"><span class="pre">purge(Module)</span></tt></td>
+<td>清楚模块 <tt class="docutils literal"><span class="pre">Module</span></tt> 中的代码。</td>
+</tr>
+<tr><td><tt class="docutils literal"><span class="pre">all_loaded()</span></tt></td>
+<td>返回所有载入模块的元组 <tt class="docutils literal"><span class="pre">{Module,</span> <span class="pre">AbsFileName}</span></tt> 。</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">內容目录</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">附录C 标准库</a><ul>
+<li><a class="reference internal" href="#io">io</a></li>
+<li><a class="reference internal" href="#file">file</a></li>
+<li><a class="reference internal" href="#lists">lists</a></li>
+<li><a class="reference internal" href="#code">code</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>上一个主题</h4>
+  <p class="topless"><a href="part-i_appendix-b.html"
+                        title="上一章">附录B 内置函数</a></p>
+  <h4>下一个主题</h4>
+  <p class="topless"><a href="part-i_appendix-d.html"
+                        title="下一章">附录D Erlang的错误处理</a></p>
+<div id="searchbox" style="display: none">
+  <h3>快速搜索</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="搜索" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    输入相关的模块，术语，类或者函数名称进行搜索
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>导航</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="part-i_appendix-d.html" title="附录D Erlang的错误处理"
+             >下一页</a></li>
+        <li class="right" >
+          <a href="part-i_appendix-b.html" title="附录B 内置函数"
+             >上一页</a> |</li>
+        <li><a href="index.html">Erlang并发编程</a> &raquo;</li>
+          <li><a href="part-i_index.html" >第 I 部分 编程</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; 版权所有 2009, CPiE-CN志愿译者团队.
+      使用 <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+    </div>
+  </body>
+</html>

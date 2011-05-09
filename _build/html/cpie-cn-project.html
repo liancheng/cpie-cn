@@ -1,0 +1,367 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>《Erlang并发编程》翻译计划 &mdash; Erlang并发编程</title>
+    <link rel="stylesheet" href="_static/nature-ext.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '1.0.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/translations.js"></script>
+    <link rel="top" title="Erlang并发编程" href="index.html" />
+    <link rel="next" title="序言" href="preface.html" />
+    <link rel="prev" title="Erlang并发编程" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>导航</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="preface.html" title="序言"
+             accesskey="N">下一页</a></li>
+        <li class="right" >
+          <a href="index.html" title="Erlang并发编程"
+             accesskey="P">上一页</a> |</li>
+        <li><a href="index.html">Erlang并发编程</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="erlang">
+<span id="cpie-cn"></span><h1>《Erlang并发编程》翻译计划<a class="headerlink" href="#erlang" title="永久链接至标题">¶</a></h1>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">发起人:</th><td class="field-body">连城</td>
+</tr>
+<tr class="field"><th class="field-name">译稿:</th><td class="field-body"><a class="reference internal" href="index.html#index"><em>在线浏览</em></a></td>
+</tr>
+<tr class="field"><th class="field-name">原文下载:</th><td class="field-body"><a class="reference external" href="http://erlang.org/download/erlang-book-part1.pdf">Concurrent Programming in Erlang (PDF)</a></td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="first admonition-title">注解</p>
+<p class="last">目前志愿者名额已满，各章节已分配完毕。除非现有志愿者出于某种原因导致无法完成所分配章节的翻译工作，否则不再征集新的志愿译者。不过仍然<strong>征集志愿者进行校订工作</strong>。</p>
+</div>
+<p>《Erlang并发编程》中文版（CPiE-CN）的翻译计划完全是因个人兴趣而开始，并公开征集志愿者进行翻译。</p>
+<p>译稿采用<a class="reference external" href="http://sphinx.pocoo.org">Sphinx</a>作为文档编辑系统，并使用<a class="reference external" href="http://subversion.tigris.org">Subversion</a>进行版本控制，Sphinx源码编码为UTF-8。文档发布服务器由连城提供。</p>
+<div class="section" id="translators">
+<span id="id4"></span><h2>志愿译者<a class="headerlink" href="#translators" title="永久链接至标题">¶</a></h2>
+<p>以下是CPiE-CN的志愿者列表，按参与时间排序：</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="20%" />
+<col width="30%" />
+<col width="50%" />
+</colgroup>
+<thead valign="bottom">
+<tr><th class="head">姓名 / ID</th>
+<th class="head">Email</th>
+<th class="head">主页</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr><td>连城</td>
+<td><img alt="liancheng-mail" src="_images/liancheng-mail.png" /></td>
+<td><a class="reference external" href="http://blog.liancheng.info">http://blog.liancheng.info</a></td>
+</tr>
+<tr><td>王飞</td>
+<td><img alt="fei-mail" src="_images/fei-mail.png" /></td>
+<td>N/A</td>
+</tr>
+<tr><td>Ken Zhao</td>
+<td><img alt="ken-mail" src="_images/ken-mail.png" /></td>
+<td>N/A</td>
+</tr>
+<tr><td>张驰原</td>
+<td><img alt="pluskid-mail" src="_images/pluskid-mail.png" /></td>
+<td><a class="reference external" href="http://blog.pluskid.org">http://blog.pluskid.org</a></td>
+</tr>
+<tr><td>丁豪</td>
+<td><img alt="zzuduoduo-mail" src="_images/zzuduoduo-mail.png" /></td>
+<td>N/A</td>
+</tr>
+<tr><td>赵卫国</td>
+<td><img alt="weiguo-mail" src="_images/weiguo-mail.png" /></td>
+<td>N/A</td>
+</tr>
+<tr><td>吴峻</td>
+<td><img alt="quark-mail" src="_images/quark-mail.png" /></td>
+<td><a class="reference external" href="http://lihdd.net">http://lihdd.net</a></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="progress">
+<span id="id5"></span><h2>翻译进度<a class="headerlink" href="#progress" title="永久链接至标题">¶</a></h2>
+<table border="1" class="docutils">
+<colgroup>
+<col width="60%" />
+<col width="20%" />
+<col width="20%" />
+</colgroup>
+<thead valign="bottom">
+<tr><th class="head">章节</th>
+<th class="head">译者</th>
+<th class="head">状态</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr><td>Preface</td>
+<td>连城</td>
+<td>完成</td>
+</tr>
+<tr><td>Acknowledgments</td>
+<td>连城</td>
+<td>完成</td>
+</tr>
+<tr><td>Introduction</td>
+<td>连城</td>
+<td>完成</td>
+</tr>
+<tr><td>1 An ERLANG Tutorial</td>
+<td>连城</td>
+<td>完成</td>
+</tr>
+<tr><td>2 Sequential Programming</td>
+<td>连城</td>
+<td>完成</td>
+</tr>
+<tr><td>3 Programming with Lists</td>
+<td>连城</td>
+<td>完成</td>
+</tr>
+<tr><td>4 Programming with Tuples</td>
+<td>王飞</td>
+<td>完成</td>
+</tr>
+<tr><td>5 Concurrent Programming</td>
+<td>张驰原</td>
+<td>完成</td>
+</tr>
+<tr><td>6 Distributed Programming</td>
+<td>Ken Zhao</td>
+<td>完成</td>
+</tr>
+<tr><td>7 Error Handling</td>
+<td>丁豪</td>
+<td>完成</td>
+</tr>
+<tr><td>8 Programming Robust Applications</td>
+<td>王飞</td>
+<td>待校订</td>
+</tr>
+<tr><td>9 Miscellaneous Items</td>
+<td>连城</td>
+<td>待校订</td>
+</tr>
+<tr><td>A ERLANG Reference Grammar</td>
+<td>吴峻</td>
+<td>待校订</td>
+</tr>
+<tr><td>B Built-in Functions</td>
+<td>吴峻</td>
+<td>进行中</td>
+</tr>
+<tr><td>C The Standard Libraries</td>
+<td>赵卫国</td>
+<td>待校订</td>
+</tr>
+<tr><td>D Errors in ERLANG</td>
+<td>赵卫国</td>
+<td>待校订</td>
+</tr>
+<tr><td>E Drivers</td>
+<td>吴峻</td>
+<td>未开始</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="id6">
+<h2>译者须知<a class="headerlink" href="#id6" title="永久链接至标题">¶</a></h2>
+<p>欢迎各位对自己的英语水平有信心且有比较充足的业余时间的同学参与翻译进程。针对本书的翻译计划，完全是出于个人兴趣，因此没有任何来自出版社或别的什么地方的进度压力，乐于参与翻译的同学不必在进度方面有所顾虑，还是以翻译质量为上，对读者负责。有兴趣的同学可以联系我（连城），Email参见<a class="reference internal" href="#translators"><em>这里</em></a>。</p>
+<p>凡报名参与翻译计划者，请提供以下信息：</p>
+<ul>
+<li><p class="first">姓名或ID</p>
+<p>总得知道怎么称呼吧 :-) 报名之后，你的大名将会出现在<a class="reference internal" href="#translators"><em>志愿译者列表</em></a>上。</p>
+</li>
+<li><p class="first">Email</p>
+<p>用于平时联络。同时，你的Email也会出现在<a class="reference internal" href="#translators"><em>志愿译者列表</em></a>上。为了防止你的邮箱被Spam，Email地址将会以图片形式出现在页面中。你可以自己制作图片，或者，如果你的Email服务商是Gmail、Hotmail、Sina、Yahoo等，可以在<a class="reference external" href="http://services.nexodyne.com/email/">这里</a>生成不错的邮箱地址图片 :-)</p>
+</li>
+</ul>
+<ul>
+<li><p class="first">Gtalk</p>
+<p>可选，用于平时联络。不过工作日时最好还是邮件联系 :-)</p>
+</li>
+<li><p class="first">个人主页地址</p>
+<p>可选，如果提供，也会出现在<a class="reference internal" href="#translators"><em>志愿译者列表</em></a>，以便于让大家更好地认识你 :-)</p>
+</li>
+<li><p class="first">SVN用户名、密码</p>
+<p>用于给各位开通SVN提交权限。</p>
+</li>
+<li><p class="first">目标章节</p>
+<p>在<a class="reference internal" href="#progress"><em>翻译进度</em></a>中的空缺章节中选择一个或多个。</p>
+</li>
+</ul>
+<p>对于报名的译者，我会在开通SVN权限后发出邮件通知。</p>
+</div>
+<div class="section" id="id8">
+<h2>必备工具<a class="headerlink" href="#id8" title="永久链接至标题">¶</a></h2>
+<p>没有金刚钻，不揽瓷器活。趁手的兵器往往让你事半功倍。为了更好地参与翻译计划，你最好能够熟练使用Sphinx和Subversion（SVN）。如果二者都不熟悉，那么也可以将无格式的译文文稿通过邮件发送给我。</p>
+<p>Subversion</p>
+<blockquote>
+<div><p>用于进行版本控制。如果你是Linux用户，那么命令行版本就挺好。如果你是Windows用户，那么推荐使用TortoiseSVN。</p>
+<p>在使用SVN进行提交时，为了能够让生成的HTML文档直接显示，请注意设置文件的SVN属性，主要是<tt class="docutils literal"><span class="pre">svn:mime-type</span></tt>和<tt class="docutils literal"><span class="pre">svn:eol-style</span></tt>。对于Linux用户，可以在checkout出的SVN工作目录的根目录中执行以下命令：</p>
+<div class="highlight-bash"><div class="highlight"><pre>find . -name <span class="s2">&quot;*.html&quot;</span> | xargs svn ps <span class="s1">&#39;svn:mime-type&#39;</span> <span class="s1">&#39;text/html&#39;</span>
+find . -name <span class="s2">&quot;*.css&quot;</span> | xargssvn ps <span class="s1">&#39;svn:mime-type&#39;</span> <span class="s1">&#39;text/css&#39;</span>
+find . -name <span class="s2">&quot;*.js&quot;</span> | xargs svn ps <span class="s1">&#39;svn:mime-type&#39;</span> <span class="s1">&#39;application/x-javascript&#39;</span>
+find . -name <span class="s2">&quot;*.png&quot;</span> | xargs svn ps <span class="s1">&#39;svn:mime-type&#39;</span> <span class="s1">&#39;image/png&#39;</span>
+find . -name <span class="s2">&quot;*.jpg&quot;</span> | xargs svn ps <span class="s1">&#39;svn:mime-type&#39;</span> <span class="s1">&#39;image/jpeg&#39;</span>
+find . -name <span class="s2">&quot;*.gif&quot;</span> | xargs svn ps <span class="s1">&#39;svn:mime-type&#39;</span> <span class="s1">&#39;image/gif&#39;</span>
+
+find . -name <span class="s2">&quot;*.rst&quot;</span> | xargs svn ps <span class="s1">&#39;svn:eol-style&#39;</span> <span class="s1">&#39;LF&#39;</span>
+find . -name <span class="s2">&quot;*.txt&quot;</span> | xargs svn ps <span class="s1">&#39;svn:eol-style&#39;</span> <span class="s1">&#39;LF&#39;</span>
+</pre></div>
+</div>
+<p>对于Windows用户，可以使用TortoiseSVN为新加入SVN的文件单独设置SVN属性。</p>
+<p>方便起见，我在Sphinx自动生成的Makefile中增加了一个伪目标<tt class="docutils literal"><span class="pre">svn-ps</span></tt>，用于自动完成属性设置工作。</p>
+</div></blockquote>
+<p>Sphinx</p>
+<blockquote>
+<div><p>Sphinx是一套基于reStructuredText格式的文档编辑系统，相较于LaTeX、DocBook等重量级工具而言非常地轻便好用，对于需要经常撰写技术文档的懒惰程序员而言，是不可多得的利器。</p>
+<p>初学者请参考<a class="reference external" href="http://sphinx.pocoo.org/contents.html">Sphinx 的官方文档</a>和<a class="reference external" href="http://scienceoss.com/use-sphinx-for-documentation">这篇教程</a>。</p>
+</div></blockquote>
+</div>
+<div class="section" id="drafts">
+<h2>关于<tt class="docutils literal"><span class="pre">drafts</span></tt>目录<a class="headerlink" href="#drafts" title="永久链接至标题">¶</a></h2>
+<p>如果你不熟悉Sphinx，而且也没有什么精力去学（真可惜），那么也可以将无格式的译文草稿提交到SVN的<tt class="docutils literal"><span class="pre">drafts</span></tt>目录，我会将之适配到Sphinx下。译文草稿的命名规范为<tt class="docutils literal"><span class="pre">章节名称_译者ID</span></tt>，如<tt class="docutils literal"><span class="pre">chapter-8_liancheng</span></tt>或<tt class="docutils literal"><span class="pre">appendix-a_somebody</span></tt>。</p>
+</div>
+<div class="section" id="sphinx">
+<h2>Sphinx译稿格式约定<a class="headerlink" href="#sphinx" title="永久链接至标题">¶</a></h2>
+<p>所有源文件应符合以下约定：</p>
+<ol class="arabic">
+<li><p class="first">文件名采用英文，章节译稿命名规则为：</p>
+<pre class="literal-block">
+chapter-<em>n</em>.rst
+</pre>
+<p>附录译稿的命名规则为：</p>
+<pre class="literal-block">
+appendix-<em>x</em>.rst
+</pre>
+</li>
+<li><p class="first">使用UNIX换行符格式。</p>
+</li>
+<li><p class="first">字符编码统一为UTF-8 。</p>
+</li>
+<li><p class="first">对中英文斜体的处理：</p>
+<ul>
+<li><p class="first">原文中对应为<em>斜体</em>的中文文本，在译稿中请使用<strong>粗体</strong>。原因正如你所见，为手写体原本就右倾的英文设计的斜体并不适合于方正的汉字。为了去除不必要的空格，请使用“<tt class="docutils literal"><span class="pre">\</span></tt>”对加粗文本前后的空格进行转义：</p>
+<div class="highlight-erlang"><pre>这是一个\ **粗体**\ 词汇</pre>
+</div>
+<p>其效果为：</p>
+<pre class="literal-block">
+这是一个<strong>粗体</strong>词汇
+</pre>
+</li>
+<li><p class="first">原文中对应为斜体的英文文本，保留斜体格式。</p>
+</li>
+</ul>
+</li>
+<li><p class="first">插图图片约定：</p>
+<ul class="simple">
+<li>图片格式请保存为PNG格式。</li>
+<li>为了保证图片比例，对原文PDF中的插图进行截图时，请将PDF文件的缩放比例调整为100%后进行截图<a class="footnote-reference" href="#id12" id="id11">[1]</a>。</li>
+</ul>
+</li>
+</ol>
+<p class="rubric">脚注</p>
+<table class="docutils footnote" frame="void" id="id12" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id11">[1]</a></td><td>谢谢张驰原（pluskid）的提醒。</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">內容目录</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">《Erlang并发编程》翻译计划</a><ul>
+<li><a class="reference internal" href="#translators">志愿译者</a></li>
+<li><a class="reference internal" href="#progress">翻译进度</a></li>
+<li><a class="reference internal" href="#id6">译者须知</a></li>
+<li><a class="reference internal" href="#id8">必备工具</a></li>
+<li><a class="reference internal" href="#drafts">关于<tt class="docutils literal"><span class="pre">drafts</span></tt>目录</a></li>
+<li><a class="reference internal" href="#sphinx">Sphinx译稿格式约定</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>上一个主题</h4>
+  <p class="topless"><a href="index.html"
+                        title="上一章">Erlang并发编程</a></p>
+  <h4>下一个主题</h4>
+  <p class="topless"><a href="preface.html"
+                        title="下一章">序言</a></p>
+<div id="searchbox" style="display: none">
+  <h3>快速搜索</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="搜索" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    输入相关的模块，术语，类或者函数名称进行搜索
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>导航</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="preface.html" title="序言"
+             >下一页</a></li>
+        <li class="right" >
+          <a href="index.html" title="Erlang并发编程"
+             >上一页</a> |</li>
+        <li><a href="index.html">Erlang并发编程</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; 版权所有 2009, CPiE-CN志愿译者团队.
+      使用 <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+    </div>
+  </body>
+</html>

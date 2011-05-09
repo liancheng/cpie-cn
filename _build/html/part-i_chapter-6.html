@@ -1,0 +1,301 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>第6章 分布式编程 &mdash; Erlang并发编程</title>
+    <link rel="stylesheet" href="_static/nature-ext.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '1.0.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/translations.js"></script>
+    <link rel="top" title="Erlang并发编程" href="index.html" />
+    <link rel="up" title="第 I 部分 编程" href="part-i_index.html" />
+    <link rel="next" title="第7章 错误处理" href="part-i_chapter-7.html" />
+    <link rel="prev" title="第5章 并行编程" href="part-i_chapter-5.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>导航</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="part-i_chapter-7.html" title="第7章 错误处理"
+             accesskey="N">下一页</a></li>
+        <li class="right" >
+          <a href="part-i_chapter-5.html" title="第5章 并行编程"
+             accesskey="P">上一页</a> |</li>
+        <li><a href="index.html">Erlang并发编程</a> &raquo;</li>
+          <li><a href="part-i_index.html" accesskey="U">第 I 部分 编程</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="id1">
+<h1>第6章 分布式编程<a class="headerlink" href="#id1" title="永久链接至标题">¶</a></h1>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">翻译:</th><td class="field-body">Ken Zhao</td>
+</tr>
+<tr class="field"><th class="field-name">校订:</th><td class="field-body">连城</td>
+</tr>
+</tbody>
+</table>
+<p>本章描述如何编写运行于Erlang<strong>节点</strong>网络上的分布式Erlang程序。我们描述了用于实现分布式系统的语言原语。Erlang进程可以自然地映射到分布式系统之中；同时，之前章节所介绍的Erlang并发原语和错误检测原语在分布式系统和单节点系统中仍保持原有属性。</p>
+<div class="section" id="id2">
+<h2>动机<a class="headerlink" href="#id2" title="永久链接至标题">¶</a></h2>
+<p>我们有很多理由去编写分布式应用，比如：</p>
+<p><strong>速度</strong></p>
+<blockquote>
+<div><p>我们可以把我们的程序切分成能够分别运行于多个不同节点的几个部分。比如，某个编译器可以将一个模块里的各个函数分发到不同节点分别编译，编译器本身则负责协调各节点的活动。</p>
+<p>在例如一个具备一个节点池的实时系统，作业以round-robin的方式指派给不同的节点，以此降低系统的响应延迟。</p>
+</div></blockquote>
+<p><strong>可靠性和容错</strong></p>
+<blockquote>
+<div>为了增加系统的可靠性，我们可以部署多个互相协作的节点，以求一个或多个节点的失败不致影响整个系统的运作。</div></blockquote>
+<p><strong>访问其他节点上的资源</strong></p>
+<blockquote>
+<div>某些软硬件资源可能只可被特定的计算机访问。</div></blockquote>
+<p><strong>秉承应用固有的分布式特质</strong></p>
+<blockquote>
+<div>会议系统、订票系统以及许多多计算机实时系统都属于这类应用。</div></blockquote>
+<p><strong>可扩展性</strong></p>
+<blockquote>
+<div>系统可以被设计成能够通过添加额外节点来增加系统的容量的形式。如果系统太慢，购买更多的处理器便可提高性能。</div></blockquote>
+</div>
+<div class="section" id="id3">
+<h2>分布式机制<a class="headerlink" href="#id3" title="永久链接至标题">¶</a></h2>
+<p>以下的BIF可用于分布式编程：</p>
+<p><tt class="docutils literal"><span class="pre">spawn(Node,</span> <span class="pre">Mod,</span> <span class="pre">Func,</span> <span class="pre">Args)</span></tt></p>
+<blockquote>
+<div>在远程节点产生一个新的进程。</div></blockquote>
+<p><tt class="docutils literal"><span class="pre">spawn_link(Node,</span> <span class="pre">Mod,</span> <span class="pre">Func,</span> <span class="pre">Args)</span></tt></p>
+<blockquote>
+<div>在远程节点产生一个新的进程并创建一个指向这个进程的链接。</div></blockquote>
+<p><tt class="docutils literal"><span class="pre">monitor_node(Node,</span> <span class="pre">Flag)</span></tt></p>
+<blockquote>
+<div>若<tt class="docutils literal"><span class="pre">Flag</span></tt>为<tt class="docutils literal"><span class="pre">true</span></tt>，该BIF令当前进程监视节点<tt class="docutils literal"><span class="pre">Node</span></tt>。如果<tt class="docutils literal"><span class="pre">Node</span></tt>出错或消失，一个<tt class="docutils literal"><span class="pre">{nodedown,</span> <span class="pre">Node}</span></tt>消息将被发送给当前进程，若<tt class="docutils literal"><span class="pre">Flag</span></tt>为<tt class="docutils literal"><span class="pre">false</span></tt>，则关闭监视。</div></blockquote>
+<p><tt class="docutils literal"><span class="pre">node()</span></tt></p>
+<blockquote>
+<div>返回当前节点名称。</div></blockquote>
+<p><tt class="docutils literal"><span class="pre">nodes()</span></tt></p>
+<blockquote>
+<div>返回已知的所有其他节点的名称列表。</div></blockquote>
+<p><tt class="docutils literal"><span class="pre">node(Item)</span></tt></p>
+<blockquote>
+<div>返回<tt class="docutils literal"><span class="pre">Item</span></tt>所处节点的名称。<tt class="docutils literal"><span class="pre">Item</span></tt>可以是Pid、引用或端口。</div></blockquote>
+<p><tt class="docutils literal"><span class="pre">disconnect_node(Nodename)</span></tt></p>
+<blockquote>
+<div>断开与节点<tt class="docutils literal"><span class="pre">Nodename</span></tt>的连接。</div></blockquote>
+<p><strong>节点</strong>是分布式Erlang的一个核心概念。在分布式Erlang系统中，术语<strong>节点</strong>指一个可参与分布式Erlang事务的运行着的Erlang系统。独立的Erlang可通过启动一个称为网络内核的特殊进程来加入一个分布式Erlang系统。这个进程将计算BIF<tt class="docutils literal"><span class="pre">alive/2</span></tt>。网络内核将在??详述。一旦启动了网络内核，系统就处于<strong>活动</strong>状态。</p>
+<p>处于活动状态的系统会被分配一个节点名称，该名称可以通过BIF <tt class="docutils literal"><span class="pre">node(Item)</span></tt>获得。该名称是一个全局唯一的原子式。不同的Erlang实现中节点名称的格式可能不同，但总是一个被<tt class="docutils literal"><span class="pre">&#64;</span></tt>分为两部分的原子式。</p>
+<p>BIF <tt class="docutils literal"><span class="pre">node(Item)</span></tt>返回创建<tt class="docutils literal"><span class="pre">Item</span></tt>的节点的名称，其中<tt class="docutils literal"><span class="pre">Item</span></tt>是一个Pid、端口或引用。</p>
+<p>BIF <tt class="docutils literal"><span class="pre">nodes/0</span></tt>返回网络中与当前节点连接的所有其他节点的名称列表。</p>
+<p>BIF <tt class="docutils literal"><span class="pre">monitor_node(Node,</span> <span class="pre">Flag)</span></tt>可用于监视节点。当节点<tt class="docutils literal"><span class="pre">Node</span></tt>失败或到<tt class="docutils literal"><span class="pre">Node</span></tt>的网络连接失败时，执行了<tt class="docutils literal"><span class="pre">monitor_node(Node,</span> <span class="pre">true)</span></tt>的进程将收到消息<tt class="docutils literal"><span class="pre">{nodedown,</span> <span class="pre">Node}</span></tt>。不幸的是，我们无法区分节点失败和网络失败。例如，以下代码会一直挂起到节点<tt class="docutils literal"><span class="pre">Node</span></tt>失败为止：</p>
+<div class="highlight-erlang"><div class="highlight"><pre><span class="p">.....</span>
+<span class="nb">monitor_node</span><span class="p">(</span><span class="nv">Node</span><span class="p">,</span> <span class="n">true</span><span class="p">),</span>
+<span class="k">receive</span>
+    <span class="p">{</span><span class="n">nodedown</span><span class="p">,</span> <span class="nv">Node</span><span class="p">}</span> <span class="o">-&gt;</span>
+         <span class="p">.....</span>
+<span class="k">end</span><span class="p">,</span>
+         <span class="p">.....</span>
+</pre></div>
+</div>
+<p>如果连接不存在，且<tt class="docutils literal"><span class="pre">monitor_node/2</span></tt>被调用，系统将尝试建立连接；若连接建立失败则投递一个<tt class="docutils literal"><span class="pre">nodedown</span></tt>消息。若针对同一节点连续两次调用<tt class="docutils literal"><span class="pre">monitor_node/2</span></tt>则在节点失败时将投递<strong>两条</strong><tt class="docutils literal"><span class="pre">nodedown</span></tt>消息。</p>
+<p>对<tt class="docutils literal"><span class="pre">monitor_node(Node,</span> <span class="pre">false)</span></tt>的调用只是递减一个计数器，该计数器用于记录<tt class="docutils literal"><span class="pre">Node</span></tt>失败时需要向调用进程发送的<tt class="docutils literal"><span class="pre">nodedown</span></tt>消息的数量。之所以这么做，是因为我们往往会用一对匹配的<tt class="docutils literal"><span class="pre">monitor_node(Node,</span> <span class="pre">true)</span></tt>和<tt class="docutils literal"><span class="pre">monitor_node(Node,</span> <span class="pre">false)</span></tt>来封装远程过程调用。</p>
+<p>BIF <tt class="docutils literal"><span class="pre">spawn/3</span></tt>和<tt class="docutils literal"><span class="pre">spawn_link/3</span></tt>用于在本地节点创建新进程。要在任意的节点创建进程，需要使用BIF <tt class="docutils literal"><span class="pre">spawn/4</span></tt>，所以：</p>
+<div class="highlight-erlang"><div class="highlight"><pre><span class="nv">Pid</span> <span class="o">=</span> <span class="nb">spawn</span><span class="p">(</span><span class="nv">Node</span><span class="p">,</span> <span class="nv">Mod</span><span class="p">,</span> <span class="nv">Func</span><span class="p">,</span> <span class="nv">Args</span><span class="p">),</span>
+</pre></div>
+</div>
+<p>将在<tt class="docutils literal"><span class="pre">Node</span></tt>产生一个进程，而<tt class="docutils literal"><span class="pre">spawn_link/4</span></tt>会在远程节点产生一个进程并建立一个与当前进程的链接。</p>
+<p>这两个BIF各自会返回一个Pid。若节点不存在，也会返回一个Pid，当然由于没有实际的进程被执行，这个Pid没什么用处。对于<tt class="docutils literal"><span class="pre">spawn_link/4</span></tt>，在节点不存在的情况下当前进程会收到一个“<tt class="docutils literal"><span class="pre">EXIT</span></tt>”消息。</p>
+<p>几乎所有针对本地Pid的操作同样都对远程Pid有效。消息可以被发送至远程进程，也可以在本地进程和远程进程间建立链接，就好像远程进程执行于本地节点一样。这意味着，比方说，发送给远程进程的消息总是按发送顺序传送、不会受损也不会丢失。这些都是由运行时系统来保障的。消息接收的唯一可能的错误控制，就是由程序员掌控的<tt class="docutils literal"><span class="pre">link</span></tt>机制，以及消息发送方和接收方的显式同步。</p>
+</div>
+<div class="section" id="id4">
+<h2>注册进程<a class="headerlink" href="#id4" title="永久链接至标题">¶</a></h2>
+<p>BIF <tt class="docutils literal"><span class="pre">register/2</span></tt>用于在本地节点上为进程注册一个名称。我们可以这样向远程节点的注册进程发送消息：</p>
+<div class="highlight-erlang"><div class="highlight"><pre><span class="p">{</span><span class="nv">Name</span><span class="p">,</span> <span class="nv">Node</span><span class="p">}</span> <span class="o">!</span> <span class="nv">Mess</span><span class="p">.</span>
+</pre></div>
+</div>
+<p>若在节点<tt class="docutils literal"><span class="pre">Node</span></tt>上存在一个注册为名称<tt class="docutils literal"><span class="pre">Name</span></tt>的进程，则<tt class="docutils literal"><span class="pre">Mess</span></tt>将被发送到该进程。若节点或注册进程不存在，则消息被丢弃。</p>
+</div>
+<div class="section" id="id5">
+<h2>连接<a class="headerlink" href="#id5" title="永久链接至标题">¶</a></h2>
+<p>Erlang节点间存在一个语言层面的连接概念。系统初被启动时，系统无法“觉察”任何其他节点，对<tt class="docutils literal"><span class="pre">nodes()</span></tt>求值将返回<tt class="docutils literal"><span class="pre">[]</span></tt>。与其他节点间的连接不是由程序员显式建立的。到远程节点<tt class="docutils literal"><span class="pre">N</span></tt>的连接是在<tt class="docutils literal"><span class="pre">N</span></tt>首次被引用时建立的。如下所示：</p>
+<div class="highlight-erlang"><div class="highlight"><pre><span class="mi">1</span><span class="o">&gt;</span> <span class="nb">nodes</span><span class="p">().</span>
+   <span class="p">[]</span>
+<span class="mi">2</span><span class="o">&gt;</span> <span class="nv">P</span> <span class="o">=</span> <span class="nb">spawn</span><span class="p">(</span><span class="n">&#39;klacke@super.eua.ericsson.se&#39;</span><span class="p">,</span> <span class="nv">M</span><span class="p">,</span> <span class="nv">F</span><span class="p">,</span> <span class="nv">A</span><span class="p">).</span>
+   <span class="o">&lt;</span><span class="mi">24</span><span class="p">.</span><span class="mi">16</span><span class="p">.</span><span class="mi">1</span><span class="o">&gt;</span>
+<span class="mi">3</span><span class="o">&gt;</span> <span class="nb">nodes</span><span class="p">().</span>
+   <span class="p">[</span><span class="n">&#39;klacke@super.eua.ericsson.se&#39;</span><span class="p">]</span>
+<span class="mi">4</span><span class="o">&gt;</span> <span class="nb">node</span><span class="p">(</span><span class="nv">P</span><span class="p">).</span>
+   <span class="n">&#39;klacke@super.eua.ericsson.se&#39;</span>
+</pre></div>
+</div>
+<p>要想建立到远程节点的连接，我们只需要在任意涉及远程节点的表达式中引用到节点的名称即可。检测网络错误的唯一手段就是使用链接BIF或<tt class="docutils literal"><span class="pre">monitor_node/2</span></tt>。要断开与某节点的连接可使用BIF <tt class="docutils literal"><span class="pre">disconnect_node(Node)</span></tt>。</p>
+<p>节点之间是松散耦合的。节点可以像进程一样动态地被创建或消失。耦合不那么松散的系统可以通过配置文件和配置数据来实现。在生产环境下，通常只会部署固定数目个具备固定名称的节点。</p>
+</div>
+<div class="section" id="id6">
+<h2>银行业务示例<a class="headerlink" href="#id6" title="永久链接至标题">¶</a></h2>
+<p>这一节我们将展示如何结合BIF <tt class="docutils literal"><span class="pre">monitor_node/2</span></tt>和向远程节点的注册进程发送消息的能力。我们将实现一个非常简单的银行服务，用以处理远程站点的请求，比如ATM机上存款、取款业务。</p>
+<div class="topic">
+<p class="topic-title first">程序6.1</p>
+<div class="highlight-erlang"><div class="highlight"><pre><span class="p">-</span><span class="ni">module</span><span class="p">(</span><span class="n">bank_server</span><span class="p">).</span>
+<span class="p">-</span><span class="ni">export</span><span class="p">([</span><span class="n">start</span><span class="o">/</span><span class="mi">0</span><span class="p">,</span> <span class="n">server</span><span class="o">/</span><span class="mi">1</span><span class="p">]).</span>
+
+<span class="nf">start</span><span class="p">()</span> <span class="o">-&gt;</span>
+    <span class="nb">register</span><span class="p">(</span><span class="n">bank_server</span><span class="p">,</span> <span class="nb">spawn</span><span class="p">(</span><span class="n">bank_server</span><span class="p">,</span> <span class="n">server</span><span class="p">,</span> <span class="p">[[]])).</span>
+
+<span class="nf">server</span><span class="p">(</span><span class="nv">Data</span><span class="p">)</span> <span class="o">-&gt;</span>
+    <span class="k">receive</span>
+        <span class="p">{</span><span class="nv">From</span><span class="p">,</span> <span class="p">{</span><span class="n">deposit</span><span class="p">,</span> <span class="nv">Who</span><span class="p">,</span> <span class="nv">Amount</span><span class="p">}}</span> <span class="o">-&gt;</span>
+            <span class="nv">From</span> <span class="o">!</span> <span class="p">{</span><span class="n">bank_server</span><span class="p">,</span> <span class="n">ok</span><span class="p">},</span>
+            <span class="n">server</span><span class="p">(</span><span class="n">deposit</span><span class="p">(</span><span class="nv">Who</span><span class="p">,</span> <span class="nv">Amount</span><span class="p">,</span> <span class="nv">Data</span><span class="p">));</span>
+        <span class="p">{</span><span class="nv">From</span><span class="p">,</span> <span class="p">{</span><span class="n">ask</span><span class="p">,</span> <span class="nv">Who</span><span class="p">}}</span> <span class="o">-&gt;</span>
+            <span class="nv">From</span> <span class="o">!</span> <span class="p">{</span><span class="n">bank_server</span><span class="p">,</span> <span class="n">lookup</span><span class="p">(</span><span class="nv">Who</span><span class="p">,</span> <span class="nv">Data</span><span class="p">)},</span>
+            <span class="n">server</span><span class="p">(</span><span class="nv">Data</span><span class="p">);</span>
+        <span class="p">{</span><span class="nv">From</span><span class="p">,</span> <span class="p">{</span><span class="n">withdraw</span><span class="p">,</span> <span class="nv">Who</span><span class="p">,</span> <span class="nv">Amount</span><span class="p">}}</span> <span class="o">-&gt;</span>
+            <span class="k">case</span> <span class="n">lookup</span><span class="p">(</span><span class="nv">Who</span><span class="p">,</span> <span class="nv">Data</span><span class="p">)</span> <span class="k">of</span>
+                <span class="n">undefined</span> <span class="o">-&gt;</span>
+                    <span class="nv">From</span> <span class="o">!</span> <span class="p">{</span><span class="n">bank_server</span><span class="p">,</span> <span class="n">no</span><span class="p">},</span>
+                    <span class="n">server</span><span class="p">(</span><span class="nv">Data</span><span class="p">);</span>
+                <span class="nv">Balance</span> <span class="k">when</span> <span class="nv">Balance</span> <span class="o">&gt;</span> <span class="nv">Amount</span> <span class="o">-&gt;</span>
+                    <span class="nv">From</span> <span class="o">!</span> <span class="p">{</span><span class="n">bank_server</span><span class="p">,</span> <span class="n">ok</span><span class="p">},</span>
+                    <span class="n">server</span><span class="p">(</span><span class="n">deposit</span><span class="p">(</span><span class="nv">Who</span><span class="p">,</span> <span class="o">-</span><span class="nv">Amount</span><span class="p">,</span> <span class="nv">Data</span><span class="p">));</span>
+                <span class="p">_</span> <span class="o">-&gt;</span>
+                    <span class="nv">From</span> <span class="o">!</span> <span class="p">{</span><span class="n">bank_server</span><span class="p">,</span> <span class="n">no</span><span class="p">},</span>
+                    <span class="n">server</span><span class="p">(</span><span class="nv">Data</span><span class="p">)</span>
+            <span class="k">end</span>
+    <span class="k">end</span><span class="p">.</span>
+
+<span class="nf">lookup</span><span class="p">(</span><span class="nv">Who</span><span class="p">,</span> <span class="p">[{</span><span class="nv">Who</span><span class="p">,</span> <span class="nv">Value</span><span class="p">}|_])</span> <span class="o">-&gt;</span> <span class="nv">Value</span><span class="p">;</span>
+<span class="nf">lookup</span><span class="p">(</span><span class="nv">Who</span><span class="p">,</span> <span class="p">[_|</span><span class="nv">T</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">lookup</span><span class="p">(</span><span class="nv">Who</span><span class="p">,</span> <span class="nv">T</span><span class="p">);</span>
+<span class="nf">lookup</span><span class="p">(_,</span> <span class="p">_)</span> <span class="o">-&gt;</span> <span class="n">undefined</span><span class="p">.</span>
+
+<span class="nf">deposit</span><span class="p">(</span><span class="nv">Who</span><span class="p">,</span> <span class="nv">X</span><span class="p">,</span> <span class="p">[{</span><span class="nv">Who</span><span class="p">,</span> <span class="nv">Balance</span><span class="p">}|</span><span class="nv">T</span><span class="p">])</span> <span class="o">-&gt;</span>
+    <span class="p">[{</span><span class="nv">Who</span><span class="p">,</span> <span class="nv">Balance</span><span class="o">+</span><span class="nv">X</span><span class="p">}|</span><span class="nv">T</span><span class="p">];</span>
+<span class="nf">deposit</span><span class="p">(</span><span class="nv">Who</span><span class="p">,</span> <span class="nv">X</span><span class="p">,</span> <span class="p">[</span><span class="nv">H</span><span class="p">|</span><span class="nv">T</span><span class="p">])</span> <span class="o">-&gt;</span>
+    <span class="p">[</span><span class="nv">H</span><span class="p">|</span><span class="n">deposit</span><span class="p">(</span><span class="nv">Who</span><span class="p">,</span> <span class="nv">X</span><span class="p">,</span> <span class="nv">T</span><span class="p">)];</span>
+<span class="nf">deposit</span><span class="p">(</span><span class="nv">Who</span><span class="p">,</span> <span class="nv">X</span><span class="p">,</span> <span class="p">[])</span> <span class="o">-&gt;</span>
+    <span class="p">[{</span><span class="nv">Who</span><span class="p">,</span> <span class="nv">X</span><span class="p">}].</span>
+</pre></div>
+</div>
+</div>
+<p>程序6.1的代码运行于银行总部。而在出纳机（或分行）中执行的是程序6.2，该程序完成与总行服务器的交互。</p>
+<div class="topic">
+<p class="topic-title first">程序6.2</p>
+<div class="highlight-erlang"><div class="highlight"><pre><span class="p">-</span><span class="ni">module</span><span class="p">(</span><span class="n">bank_client</span><span class="p">).</span>
+<span class="p">-</span><span class="ni">export</span><span class="p">([</span><span class="n">ask</span><span class="o">/</span><span class="mi">1</span><span class="p">,</span> <span class="n">deposit</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="n">withdraw</span><span class="o">/</span><span class="mi">2</span><span class="p">]).</span>
+
+<span class="nf">head_office</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">&#39;bank@super.eua.ericsson.se&#39;</span><span class="p">.</span>
+
+<span class="nf">ask</span><span class="p">(</span><span class="nv">Who</span><span class="p">)</span> <span class="o">-&gt;</span>              <span class="n">call_bank</span><span class="p">({</span><span class="n">ask</span><span class="p">,</span> <span class="nv">Who</span><span class="p">}).</span>
+<span class="nf">deposit</span><span class="p">(</span><span class="nv">Who</span><span class="p">,</span> <span class="nv">Amount</span><span class="p">)</span>  <span class="o">-&gt;</span> <span class="n">call_bank</span><span class="p">({</span><span class="n">deposit</span><span class="p">,</span> <span class="nv">Who</span><span class="p">,</span> <span class="nv">Amount</span><span class="p">}).</span>
+<span class="nf">withdraw</span><span class="p">(</span><span class="nv">Who</span><span class="p">,</span> <span class="nv">Amount</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">call_bank</span><span class="p">({</span><span class="n">withdraw</span><span class="p">,</span> <span class="nv">Who</span><span class="p">,</span> <span class="nv">Amount</span><span class="p">}).</span>
+<span class="nf">call_bank</span><span class="p">(</span><span class="nv">Msg</span><span class="p">)</span> <span class="o">-&gt;</span>
+    <span class="nv">Headoffice</span> <span class="o">=</span> <span class="n">head_office</span><span class="p">(),</span>
+    <span class="nb">monitor_node</span><span class="p">(</span><span class="nv">Headoffice</span><span class="p">,</span> <span class="n">true</span><span class="p">),</span>
+    <span class="p">{</span><span class="n">bank_server</span><span class="p">,</span> <span class="nv">Headoffice</span><span class="p">}</span> <span class="o">!</span> <span class="p">{</span><span class="n">self</span><span class="p">(),</span> <span class="nv">Msg</span><span class="p">},</span>
+    <span class="k">receive</span>
+         <span class="p">{</span><span class="n">bank_server</span><span class="p">,</span> <span class="nv">Reply</span><span class="p">}</span> <span class="o">-&gt;</span>
+             <span class="nb">monitor_node</span><span class="p">(</span><span class="nv">Headoffice</span><span class="p">,</span> <span class="n">false</span><span class="p">),</span>
+             <span class="nv">Reply</span><span class="p">;</span>
+         <span class="p">{</span><span class="n">nodedown</span><span class="p">,</span> <span class="nv">Headoffice</span><span class="p">}</span> <span class="o">-&gt;</span>
+             <span class="n">no</span>
+    <span class="k">end</span><span class="p">.</span>
+</pre></div>
+</div>
+</div>
+<p>客户端程序定义了三个访问总行服务器的接口函数：</p>
+<p><tt class="docutils literal"><span class="pre">ask(Who)</span></tt></p>
+<blockquote>
+<div>返回客户<tt class="docutils literal"><span class="pre">Who</span></tt>的余额</div></blockquote>
+<p><tt class="docutils literal"><span class="pre">deposit(Who,</span> <span class="pre">Amount)</span></tt></p>
+<blockquote>
+<div>给客户<tt class="docutils literal"><span class="pre">Who</span></tt>的帐户里面存入资金数<tt class="docutils literal"><span class="pre">Amount</span></tt></div></blockquote>
+<p><tt class="docutils literal"><span class="pre">withdraw(Who,</span> <span class="pre">Amount)</span></tt></p>
+<blockquote>
+<div>尝试从客户<tt class="docutils literal"><span class="pre">Who</span></tt>的帐户里面取出资金数<tt class="docutils literal"><span class="pre">Amount</span></tt></div></blockquote>
+<p>函数<tt class="docutils literal"><span class="pre">call_bank/1</span></tt>实现了远程过程调用。一旦总行节点停止运作，<tt class="docutils literal"><span class="pre">call_bank/1</span></tt>将会及时发现，并返回<tt class="docutils literal"><span class="pre">no</span></tt>。</p>
+<p>总行节点的名称是硬编码在源码中的。在后续章节中我们将展示集中隐藏该信息的手段。</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">內容目录</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">第6章 分布式编程</a><ul>
+<li><a class="reference internal" href="#id2">动机</a></li>
+<li><a class="reference internal" href="#id3">分布式机制</a></li>
+<li><a class="reference internal" href="#id4">注册进程</a></li>
+<li><a class="reference internal" href="#id5">连接</a></li>
+<li><a class="reference internal" href="#id6">银行业务示例</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>上一个主题</h4>
+  <p class="topless"><a href="part-i_chapter-5.html"
+                        title="上一章">第5章 并行编程</a></p>
+  <h4>下一个主题</h4>
+  <p class="topless"><a href="part-i_chapter-7.html"
+                        title="下一章">第7章 错误处理</a></p>
+<div id="searchbox" style="display: none">
+  <h3>快速搜索</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="搜索" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    输入相关的模块，术语，类或者函数名称进行搜索
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>导航</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="part-i_chapter-7.html" title="第7章 错误处理"
+             >下一页</a></li>
+        <li class="right" >
+          <a href="part-i_chapter-5.html" title="第5章 并行编程"
+             >上一页</a> |</li>
+        <li><a href="index.html">Erlang并发编程</a> &raquo;</li>
+          <li><a href="part-i_index.html" >第 I 部分 编程</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; 版权所有 2009, CPiE-CN志愿译者团队.
+      使用 <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+    </div>
+  </body>
+</html>
