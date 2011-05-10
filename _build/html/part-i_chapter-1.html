@@ -155,7 +155,7 @@
 <li><strong>列表</strong>——如：<tt class="docutils literal"><span class="pre">[]</span></tt>、<tt class="docutils literal"><span class="pre">[a,</span> <span class="pre">b,</span> <span class="pre">12]</span></tt>、<tt class="docutils literal"><span class="pre">[22]</span></tt>、<tt class="docutils literal"><span class="pre">[a,</span> <span class="pre">'hello</span> <span class="pre">friend']</span></tt>。列表用于存储可变数量的元素，并被写作以方括号包围的元素序列。</li>
 </ul>
 </div></blockquote>
-<p>元组合列表的成员本身可以是任意的 Erlang 数据元素——这使得我们可以创建任意复杂的数据结构。</p>
+<p>元组和列表的成员本身可以是任意的 Erlang 数据元素——这使得我们可以创建任意复杂的数据结构。</p>
 <p>在 Erlang 中可使用<strong>变量</strong>存储各种类型的值。变量总是以大写字母开头，例如，以下代码片段：</p>
 <div class="highlight-erlang"><div class="highlight"><pre><span class="nv">X</span> <span class="o">=</span> <span class="p">{</span><span class="n">book</span><span class="p">,</span> <span class="n">preface</span><span class="p">,</span> <span class="n">acknowledgements</span><span class="p">,</span> <span class="n">contents</span><span class="p">,</span>
      <span class="p">{</span><span class="n">chapters</span><span class="p">,</span> <span class="p">[</span>
@@ -288,7 +288,7 @@
 <h3>一个echo进程<a class="headerlink" href="#echo" title="永久链接至标题">¶</a></h3>
 <p>作为一个并发进程的简单示例，我们创建一个<em>echo</em>进程用于原样发回它所接收到的消息。我们假设进程<tt class="docutils literal"><span class="pre">A</span></tt>向echo进程发送消息<tt class="docutils literal"><span class="pre">{A,</span> <span class="pre">Msg}</span></tt>，则echo进程向<tt class="docutils literal"><span class="pre">A</span></tt>发送一条包含<tt class="docutils literal"><span class="pre">Msg</span></tt>的新消息。如图1.1所示。</p>
 <div class="figure">
-<img alt="_images/1.1.png" src="_images/1.1.png" />
+<img alt="_images/1.11.png" src="_images/1.11.png" />
 <p class="caption">图1.1 一个echo进程</p>
 </div>
 <p>在程序1.5中<tt class="docutils literal"><span class="pre">echo:start()</span></tt>创建一个返回任何发送给它的消息的简单进程。</p>
